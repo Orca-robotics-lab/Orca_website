@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simulators — ORCA Robotics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body data-screen-label="Simulators">
+<template id="__bundler_thumbnail">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F7F7F5"/></svg>
+</template>
+
+<!-- ============== NAV ============== -->
+<header class="nav">
+  <div class="container nav__inner">
+    <a href="index.html" class="brand" aria-label="Orca Robotics home">
+      <img class="brand__mark-img" src="assets/orca-mark.png" alt="" />
+      <span class="brand__word">Orca Robotics</span>
+    </a>
+    <nav>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="workshops.html">Workshops</a></li>
+        <li><a href="simulators.html" class="is-active">Simulators</a></li>
+        <li><a href="atal-lab.html">Atal Lab</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+    <button type="button" class="btn btn--outline btn--sm nav__cta" data-community-open>Join Community</button>
+    <a href="shop.html" class="btn btn--primary btn--sm nav__cta">Shop</a>
+    <button class="nav__hamburger" aria-label="Open menu"><span></span></button>
+  </div>
+</header>
+
+<!-- ============== HEADER ============== -->
+<section class="page-header">
+  <div class="container">
+    <span class="eyebrow">— 04 / Simulators</span>
+    <h1>Simulators.</h1>
+    <p class="lead">A growing library of simulators and calculators designed to simplify complex robotics and engineering concepts.</p>
+  </div>
+</section>
+
+<!-- ============== GRID ============== -->
+<section class="section section--first">
+  <div class="container">
+    <div class="grid-3 reveal-group">
+
+      <!-- LIVE: 2R Planar Arm -->
+      <article class="card sim-card sim-card--clickable" onclick="location.href='sim-robot.html'">
+        <img src="assets/sim-preview-robot.png" alt="2 DOF Arm Simulator preview" class="sim-card__preview" />
+        <div class="sim-card__head">
+          <span class="mono" style="font-size:11px;letter-spacing:.14em;color:var(--text-muted)">S—01</span>
+          <span class="tag">Robotics</span>
+        </div>
+        <h3>2 DOF Arm Simulator</h3>
+        <p class="sim-card__desc">Forward and inverse kinematics of a 2-axis planar arm. Adjust DH parameters, drag the target, and watch the arm solve in real time.</p>
+        <div class="sim-card__foot">
+          <span class="badge badge--live"><span class="dot"></span>Live</span>
+          <a href="sim-robot.html" class="sim-card__launch">Launch →</a>
+        </div>
+      </article>
+
+      <!-- LIVE: DOF Explorer -->
+      <article class="card sim-card sim-card--clickable" onclick="location.href='sim-dof-explorer.html'">
+        <img src="assets/sim-preview-dof.png" alt="DOF Explorer preview" class="sim-card__preview" />
+        <div class="sim-card__head">
+          <span class="mono" style="font-size:11px;letter-spacing:.14em;color:var(--text-muted)">S—02</span>
+          <span class="tag">Robotics</span>
+        </div>
+        <h3>DOF Explorer</h3>
+        <p class="sim-card__desc">Toggle degrees of freedom on a 3D object and see exactly what each DOF means. Includes real-world presets, door, drone, robot arm.</p>
+        <div class="sim-card__foot">
+          <span class="badge badge--live"><span class="dot"></span>Live</span>
+          <a href="sim-dof-explorer.html" class="sim-card__launch">Launch →</a>
+        </div>
+      </article>
+
+      <!-- LIVE: Human Hand -->
+      <article class="card sim-card sim-card--clickable" onclick="location.href='sim-hand-dof.html'">
+        <img src="assets/sim-preview-hand.png" alt="Human Arm & Hand DOF preview" class="sim-card__preview" />
+        <div class="sim-card__head">
+          <span class="mono" style="font-size:11px;letter-spacing:.14em;color:var(--text-muted)">S—03</span>
+          <span class="tag">Robotics</span>
+        </div>
+        <h3>Human Arm &amp; Hand DOF</h3>
+        <p class="sim-card__desc">26-DOF interactive hand model. Pose each joint individually or apply presets, fist, pinch, wave. See how biological DOF compares to robots.</p>
+        <div class="sim-card__foot">
+          <span class="badge badge--live"><span class="dot"></span>Live</span>
+          <a href="sim-hand-dof.html" class="sim-card__launch">Launch →</a>
+        </div>
+      </article>
+
+      <!-- LIVE: Accuracy & Repeatability -->
+      <article class="card sim-card sim-card--clickable" onclick="location.href='sim-2dof-accuracy.html'">
+        <img src="assets/sim-preview-accuracy.png" alt="Accuracy & Repeatability preview" class="sim-card__preview" />
+        <div class="sim-card__head">
+          <span class="mono" style="font-size:11px;letter-spacing:.14em;color:var(--text-muted)">S—04</span>
+          <span class="tag">Robotics</span>
+        </div>
+        <h3>Accuracy &amp; Repeatability</h3>
+        <p class="sim-card__desc">Enter measured trial positions for a 2-DOF arm and compute ISO 9283 accuracy and repeatability. Scatter plot and bar chart generated live.</p>
+        <div class="sim-card__foot">
+          <span class="badge badge--live"><span class="dot"></span>Live</span>
+          <a href="sim-2dof-accuracy.html" class="sim-card__launch">Launch →</a>
+        </div>
+      </article>
+
+      <!-- LIVE: Delta Robot -->
+      <article class="card sim-card sim-card--clickable" onclick="location.href='sim-delta.html'">
+        <img src="assets/delta-robot.png" alt="Delta Robot Simulator preview" class="sim-card__preview" />
+        <div class="sim-card__head">
+          <span class="mono" style="font-size:11px;letter-spacing:.14em;color:var(--text-muted)">S—05</span>
+          <span class="tag">Robotics</span>
+        </div>
+        <h3>Delta Robot Simulator</h3>
+        <p class="sim-card__desc">A 3-arm parallel delta. Configure base, arm and platform sizes, drive the motors, and solve targets in 3D.</p>
+        <div class="sim-card__foot">
+          <span class="badge badge--live"><span class="dot"></span>Live</span>
+          <a href="sim-delta.html" class="sim-card__launch">Launch →</a>
+        </div>
+      </article>
+
+      <!-- LIVE: Linear Delta -->
+      <article class="card sim-card sim-card--clickable" onclick="location.href='sim-delta-linear.html'">
+        <img src="assets/delta-robot.png" alt="Linear Delta Simulator preview" class="sim-card__preview" />
+        <div class="sim-card__head">
+          <span class="mono" style="font-size:11px;letter-spacing:.14em;color:var(--text-muted)">S—06</span>
+          <span class="tag">Robotics</span>
+        </div>
+        <h3>Linear Delta Simulator</h3>
+        <p class="sim-card__desc">A 3-tower linear delta (Rostock-style). Slide the carriages up and down, solve targets, and trace paths through the prismatic workspace.</p>
+        <div class="sim-card__foot">
+          <span class="badge badge--live"><span class="dot"></span>Live</span>
+          <a href="sim-delta-linear.html" class="sim-card__launch">Launch →</a>
+        </div>
+      </article>
+
+      <article class="card sim-card sim-card--disabled">
+        <div class="sim-card__head">
+          <span class="mono" style="font-size:11px;letter-spacing:.14em;color:var(--text-muted)">S—07</span>
+          <span class="tag">ROS2</span>
+        </div>
+        <h3>ROS2 Navigation Simulator</h3>
+        <p class="sim-card__desc">Simulate SLAM, path planning and obstacle avoidance for an AMR.</p>
+        <div class="sim-card__foot">
+          <span class="badge"><span class="dot"></span>Coming Soon</span>
+          <a href="#" class="sim-card__launch">Notify Me →</a>
+        </div>
+      </article>
+
+      <article class="card sim-card sim-card--disabled">
+        <div class="sim-card__head">
+          <span class="mono" style="font-size:11px;letter-spacing:.14em;color:var(--text-muted)">S—08</span>
+          <span class="tag">ROS2</span>
+        </div>
+        <h3>6 DOF Arm Simulator</h3>
+        <p class="sim-card__desc">Model and control a 6-axis industrial arm with trajectory planning.</p>
+        <div class="sim-card__foot">
+          <span class="badge"><span class="dot"></span>Coming Soon</span>
+          <a href="#" class="sim-card__launch">Notify Me →</a>
+        </div>
+      </article>
+
+      <article class="card sim-card sim-card--disabled">
+        <div class="sim-card__head">
+          <span class="mono" style="font-size:11px;letter-spacing:.14em;color:var(--text-muted)">S—09</span>
+          <span class="tag">Physics</span>
+        </div>
+        <h3>RLC Circuit Simulator</h3>
+        <p class="sim-card__desc">Explore impedance, resonance, and phase response interactively.</p>
+        <div class="sim-card__foot">
+          <span class="badge"><span class="dot"></span>Coming Soon</span>
+          <a href="#" class="sim-card__launch">Notify Me →</a>
+        </div>
+      </article>
+
+      <!-- Note card -->
+      <article class="card" style="background:transparent;border-style:dashed;display:flex;flex-direction:column;justify-content:center;gap:14px;">
+        <span class="eyebrow">Note</span>
+        <p style="font-size:14.5px;color:var(--text-secondary);">Simulators are companion tools to Orca workshops. Students use them during sessions to verify real-world builds.</p>
+        <a href="workshops.html" class="sim-card__launch" style="align-self:start;">See Workshops →</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============== FOOTER ============== -->
+<footer class="footer">
+  <div class="container footer__inner">
+    <div>Orca Robotics © 2026</div>
+    <ul class="footer__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="workshops.html">Workshops</a></li>
+      <li><a href="simulators.html">Simulators</a></li>
+      <li><a href="atal-lab.html">Atal Lab</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+    </ul>
+    <div class="footer__right"><a href="mailto:info@orcarobotics.in">info@orcarobotics.in</a></div>
+  </div>
+</footer>
+
+<script src="scripts.js"></script>
+</body>
+</html>

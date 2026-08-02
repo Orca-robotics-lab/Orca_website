@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The joints that make a robot move — ORCA Robotics</title>
+<meta name="description" content="An interactive 3D guide to robot joints. Orbit each one and drive it yourself." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body data-screen-label="Blog · Robot Joints">
+
+<header class="nav">
+  <div class="container nav__inner">
+    <a href="index.html" class="brand" aria-label="Orca Robotics home">
+      <img class="brand__mark-img" src="assets/orca-mark.png" alt="" />
+      <span class="brand__word">Orca Robotics</span>
+    </a>
+    <nav>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="workshops.html">Workshops</a></li>
+        <li><a href="simulators.html">Simulators</a></li>
+        <li><a href="atal-lab.html">Atal Lab</a></li>
+        <li><a href="blog.html" class="is-active">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+    <button type="button" class="btn btn--outline btn--sm nav__cta" data-community-open>Join Community</button>
+    <a href="shop.html" class="btn btn--primary btn--sm nav__cta">Shop</a>
+    <button class="nav__hamburger" aria-label="Open menu"><span></span></button>
+  </div>
+</header>
+
+<div class="lab">
+
+  <div class="lab-head">
+    <a href="blog.html" class="lab-back">← Back to Blog</a>
+    <div class="lab-meta">
+      <span>Interactive 3D</span>
+      <span class="lab-meta__dot"></span>
+      <span>Jun 2026</span>
+      <span class="lab-meta__dot"></span>
+      <span>6 min read</span>
+    </div>
+    <h1 class="lab-title">The joints that make a robot move</h1>
+    <p class="lab-dek">Every robot is a chain of rigid links connected by joints. The joint decides what kind of motion is possible, and how many independent ways the arm can move. Here are six of them, in 3D. Orbit any panel, then drive it with the sliders.</p>
+  </div>
+
+  <div class="lab-prose">
+    <p>Pick up any robot arm and you will find the same two ingredients. <strong>Links</strong>, the rigid pieces that hold their shape, and <strong>joints</strong>, the connections that let one link move relative to the next. The links are the bones. The joints are where all the motion lives.</p>
+    <p>Each joint type allows a specific kind of movement, and a specific number of <strong>degrees of freedom</strong>, the count of independent ways it can move. One degree of freedom means a single number describes its state. Three means you need three. Drag inside any panel below to orbit the camera, and use the sliders to actuate the joint.</p>
+  </div>
+
+  <!-- 1. Revolute -->
+  <div class="jrow">
+    <div class="jrow__info">
+      <span class="jrow__index">Joint 01</span>
+      <span class="jrow__dof">1 DOF · Rotational</span>
+      <h2>Revolute</h2>
+      <p class="jrow__desc">Rotates about a single axis, like a hinge or your own elbow. One angle describes everything it does. It is the workhorse joint of almost every robot arm.</p>
+      <div class="jrow__controls">
+        <div class="jctl">
+          <span class="jctl__name">Angle</span>
+          <input type="range" class="joint-slider" id="rev-angle" min="-180" max="180" value="35" />
+          <span class="jctl__val" id="rev-angle-val">35°</span>
+        </div>
+      </div>
+      <span class="jrow__hint">Drag the panel to orbit</span>
+    </div>
+    <div class="jrow__viz">
+      <span class="jrow__badge">Revolute · 1 DOF</span>
+      <canvas class="jrow__canvas" id="rev-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- 2. Prismatic -->
+  <div class="jrow jrow--flip">
+    <div class="jrow__info">
+      <span class="jrow__index">Joint 02</span>
+      <span class="jrow__dof">1 DOF · Translational</span>
+      <h2>Prismatic</h2>
+      <p class="jrow__desc">Slides along a straight line instead of rotating. Think of a drawer, a hydraulic ram, or the carriage on a 3D printer. Its one number is a distance, not an angle.</p>
+      <div class="jrow__controls">
+        <div class="jctl">
+          <span class="jctl__name">Travel</span>
+          <input type="range" class="joint-slider" id="pri-travel" min="0" max="120" value="35" />
+          <span class="jctl__val" id="pri-travel-val">35 mm</span>
+        </div>
+      </div>
+      <span class="jrow__hint">Drag the panel to orbit</span>
+    </div>
+    <div class="jrow__viz">
+      <span class="jrow__badge">Prismatic · 1 DOF</span>
+      <canvas class="jrow__canvas" id="pri-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- 3. Cylindrical -->
+  <div class="jrow">
+    <div class="jrow__info">
+      <span class="jrow__index">Joint 03</span>
+      <span class="jrow__dof">2 DOF · Rotational + Translational</span>
+      <h2>Cylindrical</h2>
+      <p class="jrow__desc">A revolute and a prismatic joint sharing one axis. The collar can spin around the shaft and slide along it at the same time, giving two independent degrees of freedom.</p>
+      <div class="jrow__controls">
+        <div class="jctl">
+          <span class="jctl__name">Slide</span>
+          <input type="range" class="joint-slider" id="cyl-slide" min="0" max="120" value="50" />
+          <span class="jctl__val" id="cyl-slide-val">50 mm</span>
+        </div>
+        <div class="jctl">
+          <span class="jctl__name">Twist</span>
+          <input type="range" class="joint-slider" id="cyl-twist" min="0" max="360" value="40" />
+          <span class="jctl__val" id="cyl-twist-val">40°</span>
+        </div>
+      </div>
+      <span class="jrow__hint">Drag the panel to orbit</span>
+    </div>
+    <div class="jrow__viz">
+      <span class="jrow__badge">Cylindrical · 2 DOF</span>
+      <canvas class="jrow__canvas" id="cyl-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- 4. Screw -->
+  <div class="jrow jrow--flip">
+    <div class="jrow__info">
+      <span class="jrow__index">Joint 04</span>
+      <span class="jrow__dof">1 DOF · Helical</span>
+      <h2>Screw</h2>
+      <p class="jrow__desc">Like a cylindrical joint, but the rotation and the sliding are locked together by the thread. Turn it and it advances, exactly like a bolt. Two visible motions, but only one degree of freedom.</p>
+      <div class="jrow__controls">
+        <div class="jctl">
+          <span class="jctl__name">Turn</span>
+          <input type="range" class="joint-slider" id="scr-turn" min="0" max="720" value="120" />
+          <span class="jctl__val" id="scr-turn-val">120°</span>
+        </div>
+        <div class="jctl jctl--readout">
+          <span class="jctl__name">Travel</span>
+          <span class="jctl__bar">coupled to turn</span>
+          <span class="jctl__val" id="scr-travel-val">2.7 mm</span>
+        </div>
+      </div>
+      <span class="jrow__hint">Drag the panel to orbit</span>
+    </div>
+    <div class="jrow__viz">
+      <span class="jrow__badge">Screw · 1 DOF</span>
+      <canvas class="jrow__canvas" id="scr-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- 5. Spherical -->
+  <div class="jrow">
+    <div class="jrow__info">
+      <span class="jrow__index">Joint 05</span>
+      <span class="jrow__dof">3 DOF · Rotational</span>
+      <h2>Spherical</h2>
+      <p class="jrow__desc">A ball and socket, like your shoulder or hip. The link can point in any direction and spin about its own axis, packing three rotational degrees of freedom into one compact joint.</p>
+      <div class="jrow__controls">
+        <div class="jctl">
+          <span class="jctl__name">Pitch</span>
+          <input type="range" class="joint-slider" id="sph-pitch" min="0" max="75" value="35" />
+          <span class="jctl__val" id="sph-pitch-val">35°</span>
+        </div>
+        <div class="jctl">
+          <span class="jctl__name">Yaw</span>
+          <input type="range" class="joint-slider" id="sph-yaw" min="0" max="360" value="30" />
+          <span class="jctl__val" id="sph-yaw-val">30°</span>
+        </div>
+        <div class="jctl">
+          <span class="jctl__name">Roll</span>
+          <input type="range" class="joint-slider" id="sph-roll" min="0" max="360" value="0" />
+          <span class="jctl__val" id="sph-roll-val">0°</span>
+        </div>
+      </div>
+      <span class="jrow__hint">Drag the panel to orbit</span>
+    </div>
+    <div class="jrow__viz">
+      <span class="jrow__badge">Spherical · 3 DOF</span>
+      <canvas class="jrow__canvas" id="sph-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- 6. 2DOF arm -->
+  <div class="jrow jrow--flip">
+    <div class="jrow__info">
+      <span class="jrow__index">Joint 06 · Combined</span>
+      <span class="jrow__dof">2 DOF · Planar</span>
+      <h2>Two revolutes, one arm</h2>
+      <p class="jrow__desc">Chain a shoulder and an elbow, two revolute joints, and the tip can reach anywhere in a working plane. Move each joint and watch the reach. This is the heart of the 2DOF Robotic Arm.</p>
+      <div class="jrow__controls">
+        <div class="jctl">
+          <span class="jctl__name">Shoulder</span>
+          <input type="range" class="joint-slider" id="arm-shoulder" min="-20" max="170" value="55" />
+          <span class="jctl__val" id="arm-shoulder-val">55°</span>
+        </div>
+        <div class="jctl">
+          <span class="jctl__name">Elbow</span>
+          <input type="range" class="joint-slider" id="arm-elbow" min="-150" max="150" value="60" />
+          <span class="jctl__val" id="arm-elbow-val">60°</span>
+        </div>
+      </div>
+      <span class="jrow__hint">Drag the panel to orbit</span>
+    </div>
+    <div class="jrow__viz">
+      <span class="jrow__badge">2DOF Arm · Planar</span>
+      <canvas class="jrow__canvas" id="arm-canvas"></canvas>
+    </div>
+  </div>
+
+  <div class="lab-prose">
+    <p><strong>The rest of the family.</strong> Six joints cover most of what you will meet, but there are a couple more. A <strong>universal</strong> joint bends in two directions but cannot spin, giving two degrees of freedom. A <strong>planar</strong> joint glides across a flat surface and turns, giving three. Every one of them is just a different answer to the same question. Which motions do we allow, and which do we lock.</p>
+    <p>That single question is the foundation of all of robotics. Get it into your hands on a real arm, and the rest follows.</p>
+  </div>
+
+  <div class="lab-cta">
+    <span class="lab-cta__eyebrow">Build it yourself</span>
+    <h3>The 2DOF Robotic Arm</h3>
+    <p>Two revolute joints, a real servo driven arm, and a guidebook that derives every joint, parameter, and equation from first principles.</p>
+    <a href="product-2dof.html" class="btn btn--primary">View the Kit <span class="arrow"></span></a>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div>Orca Robotics © 2026</div>
+    <ul class="footer__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="workshops.html">Workshops</a></li>
+      <li><a href="simulators.html">Simulators</a></li>
+      <li><a href="atal-lab.html">Atal Lab</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+    </ul>
+    <div class="footer__right"><a href="mailto:info@orcarobotics.in">info@orcarobotics.in</a></div>
+  </div>
+</footer>
+
+<script src="scripts.js"></script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const RAD = Math.PI / 180;
+const demos = [];
+
+const matBase   = new THREE.MeshStandardMaterial({ color: 0xbcbcb5, metalness: 0.25, roughness: 0.6 });
+const matDark   = new THREE.MeshStandardMaterial({ color: 0x1f1f1f, metalness: 0.35, roughness: 0.5 });
+const matMid    = new THREE.MeshStandardMaterial({ color: 0x474744, metalness: 0.3, roughness: 0.55 });
+const matAccent = new THREE.MeshStandardMaterial({ color: 0xE87722, metalness: 0.2, roughness: 0.45 });
+
+function makeViz(id, camPos, targetY) {
+  const canvas = document.getElementById(id);
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0xf7f7f5, 1);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+  camera.position.set(camPos[0], camPos[1], camPos[2]);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.09;
+  controls.enablePan = false;
+  controls.enableZoom = false;
+  controls.minPolarAngle = 0.12;
+  controls.maxPolarAngle = Math.PI * 0.49;
+  controls.target.set(0, targetY, 0);
+  controls.update();
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x6b6b66, 1.0));
+  const key = new THREE.DirectionalLight(0xffffff, 1.55); key.position.set(5, 9, 6); scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.5); fill.position.set(-6, 4, -4); scene.add(fill);
+  scene.add(new THREE.GridHelper(14, 14, 0xccccc6, 0xe4e4de));
+  const v = { renderer, scene, camera, controls, canvas, visible: true };
+  fit(v);
+  const ro = new ResizeObserver(() => fit(v)); ro.observe(canvas);
+  const io = new IntersectionObserver((es) => es.forEach((e) => (v.visible = e.isIntersecting)), { rootMargin: "150px" });
+  io.observe(canvas);
+  demos.push(v);
+  return v;
+}
+
+function fit(v) {
+  const w = v.canvas.clientWidth, h = v.canvas.clientHeight;
+  if (!w || !h) return;
+  v.renderer.setSize(w, h, false);
+  v.camera.aspect = w / h;
+  v.camera.updateProjectionMatrix();
+}
+
+function bind(id, cb) {
+  const el = document.getElementById(id);
+  const out = document.getElementById(id + "-val");
+  if (!el) return;
+  const fn = () => cb(parseFloat(el.value), out);
+  el.addEventListener("input", fn);
+  fn();
+}
+
+function cyl(r1, r2, h, mat, seg) { return new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, seg || 32), mat); }
+function box(w, h, d, mat) { return new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); }
+function ball(r, mat) { return new THREE.Mesh(new THREE.SphereGeometry(r, 28, 28), mat); }
+
+/* 01 Revolute */
+function buildRevolute() {
+  const v = makeViz("rev-canvas", [5.5, 3.6, 6.5], 1.3);
+  const base = cyl(0.78, 0.95, 0.5, matBase, 40); base.position.y = 0.25; v.scene.add(base);
+  const p1 = box(0.22, 0.95, 0.22, matBase); p1.position.set(0.66, 0.7, 0); v.scene.add(p1);
+  const p2 = box(0.22, 0.95, 0.22, matBase); p2.position.set(-0.66, 0.7, 0); v.scene.add(p2);
+  const axle = cyl(0.07, 0.07, 1.55, matAccent, 20); axle.rotation.z = Math.PI / 2; axle.position.y = 1.1; v.scene.add(axle);
+  const g = new THREE.Group(); g.position.set(0, 1.1, 0); v.scene.add(g);
+  const link = box(0.32, 1.7, 0.32, matDark); link.position.y = 0.85; g.add(link);
+  const handle = ball(0.2, matAccent); handle.position.y = 1.75; g.add(handle);
+  bind("rev-angle", (d, out) => { g.rotation.x = -d * RAD; out.textContent = Math.round(d) + "°"; });
+}
+
+/* 02 Prismatic */
+function buildPrismatic() {
+  const v = makeViz("pri-canvas", [5.5, 3.2, 7], 0.85);
+  const rail = box(3.7, 0.2, 0.6, matBase); rail.position.y = 0.45; v.scene.add(rail);
+  const s1 = box(0.16, 0.5, 0.72, matMid); s1.position.set(1.85, 0.6, 0); v.scene.add(s1);
+  const s2 = box(0.16, 0.5, 0.72, matMid); s2.position.set(-1.85, 0.6, 0); v.scene.add(s2);
+  const blk = new THREE.Group(); v.scene.add(blk);
+  const body = box(0.8, 0.66, 0.92, matDark); body.position.y = 0.86; blk.add(body);
+  const stripe = box(0.82, 0.1, 0.94, matAccent); stripe.position.y = 1.21; blk.add(stripe);
+  bind("pri-travel", (mm, out) => { blk.position.x = (mm / 120) * 2.8 - 1.4; out.textContent = Math.round(mm) + " mm"; });
+}
+
+/* 03 Cylindrical */
+function buildCylindrical() {
+  const v = makeViz("cyl-canvas", [5.5, 4, 6.2], 1.5);
+  const base = cyl(0.82, 0.98, 0.4, matBase, 40); base.position.y = 0.2; v.scene.add(base);
+  const shaft = cyl(0.2, 0.2, 3.0, matBase, 32); shaft.position.y = 1.7; v.scene.add(shaft);
+  const collar = new THREE.Group(); v.scene.add(collar);
+  const ring = cyl(0.42, 0.42, 0.6, matDark, 36); collar.add(ring);
+  const arm = box(1.0, 0.18, 0.18, matMid); arm.position.x = 0.6; collar.add(arm);
+  const tip = ball(0.18, matAccent); tip.position.x = 1.15; collar.add(tip);
+  bind("cyl-slide", (mm, out) => { collar.position.y = 0.6 + (mm / 120) * 2.0; out.textContent = Math.round(mm) + " mm"; });
+  bind("cyl-twist", (d, out) => { collar.rotation.y = d * RAD; out.textContent = Math.round(d) + "°"; });
+}
+
+/* 04 Screw */
+function buildScrew() {
+  const v = makeViz("scr-canvas", [5.5, 4, 6.2], 1.4);
+  const base = cyl(0.82, 0.98, 0.4, matBase, 40); base.position.y = 0.2; v.scene.add(base);
+  const shaft = cyl(0.16, 0.16, 2.9, matBase, 32); shaft.position.y = 1.65; v.scene.add(shaft);
+  class Helix extends THREE.Curve {
+    constructor(r, turns, h) { super(); this.r = r; this.turns = turns; this.h = h; }
+    getPoint(t) { const a = t * this.turns * Math.PI * 2; return new THREE.Vector3(this.r * Math.cos(a), t * this.h, this.r * Math.sin(a)); }
+  }
+  const thread = new THREE.Mesh(new THREE.TubeGeometry(new Helix(0.22, 9, 2.7), 240, 0.05, 8, false), matMid);
+  thread.position.y = 0.35; v.scene.add(thread);
+  const nut = new THREE.Group(); v.scene.add(nut);
+  const hex = cyl(0.44, 0.44, 0.5, matDark, 6); nut.add(hex);
+  const mark = box(0.14, 0.52, 0.14, matAccent); mark.position.x = 0.44; nut.add(mark);
+  const travelOut = document.getElementById("scr-travel-val");
+  const MM_PER_TURN = 8;
+  bind("scr-turn", (d, out) => {
+    nut.rotation.y = d * RAD;
+    nut.position.y = 0.55 + (d / 360) * 0.3;
+    out.textContent = Math.round(d) + "°";
+    if (travelOut) travelOut.textContent = ((d / 360) * MM_PER_TURN).toFixed(1) + " mm";
+  });
+}
+
+/* 05 Spherical */
+function buildSpherical() {
+  const v = makeViz("sph-canvas", [5.5, 3.8, 6.2], 1.6);
+  const ped = cyl(0.5, 0.72, 1.1, matBase, 32); ped.position.y = 0.55; v.scene.add(ped);
+  const aim = new THREE.Group(); aim.position.y = 1.6; aim.rotation.order = "YXZ"; v.scene.add(aim);
+  const roll = new THREE.Group(); aim.add(roll);
+  const b = ball(0.55, matDark); roll.add(b);
+  const rod = cyl(0.13, 0.13, 1.5, matMid, 24); rod.position.y = 0.95; roll.add(rod);
+  const tip = ball(0.2, matAccent); tip.position.y = 1.7; roll.add(tip);
+  const nub = box(0.16, 0.16, 0.16, matAccent); nub.position.set(0.34, 1.45, 0); roll.add(nub);
+  bind("sph-pitch", (d, out) => { aim.rotation.x = d * RAD; out.textContent = Math.round(d) + "°"; });
+  bind("sph-yaw", (d, out) => { aim.rotation.y = d * RAD; out.textContent = Math.round(d) + "°"; });
+  bind("sph-roll", (d, out) => { roll.rotation.y = d * RAD; out.textContent = Math.round(d) + "°"; });
+}
+
+/* 06 2DOF arm */
+function buildArm() {
+  const v = makeViz("arm-canvas", [6, 3.8, 7], 1.7);
+  const base = cyl(0.7, 0.86, 0.5, matBase, 40); base.position.y = 0.25; v.scene.add(base);
+  const sh = new THREE.Group(); sh.position.y = 0.6; v.scene.add(sh);
+  const ax1 = cyl(0.08, 0.08, 0.8, matAccent, 16); ax1.rotation.z = Math.PI / 2; sh.add(ax1);
+  const upper = box(0.3, 1.6, 0.3, matDark); upper.position.y = 0.8; sh.add(upper);
+  const el = new THREE.Group(); el.position.y = 1.6; sh.add(el);
+  const ax2 = cyl(0.07, 0.07, 0.7, matAccent, 16); ax2.rotation.z = Math.PI / 2; el.add(ax2);
+  const fore = box(0.26, 1.4, 0.26, matMid); fore.position.y = 0.7; el.add(fore);
+  const tip = ball(0.2, matAccent); tip.position.y = 1.4; el.add(tip);
+  bind("arm-shoulder", (d, out) => { sh.rotation.x = -d * RAD; out.textContent = Math.round(d) + "°"; });
+  bind("arm-elbow", (d, out) => { el.rotation.x = -d * RAD; out.textContent = Math.round(d) + "°"; });
+}
+
+[buildRevolute, buildPrismatic, buildCylindrical, buildScrew, buildSpherical, buildArm].forEach((f) => {
+  try { f(); } catch (e) { console.warn("joint demo failed", e); }
+});
+
+function loop() {
+  for (const v of demos) {
+    if (v.visible) { v.controls.update(); v.renderer.render(v.scene, v.camera); }
+  }
+  requestAnimationFrame(loop);
+}
+loop();
+window.addEventListener("resize", () => demos.forEach(fit));
+</script>
+</body>
+</html>

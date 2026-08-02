@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pulse Width Modulation, from the ground up — ORCA Robotics</title>
+<meta name="description" content="An interactive guide to PWM — from duty cycle and frequency to RC filtering, timer resolution, servo control, and sinusoidal PWM. Drive every concept yourself." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  /* PWM article — a few local touches on top of the shared .lab / .jrow system */
+  .pwm-eq {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    margin: 22px 0;
+    color: var(--text-primary);
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  .pwm-eq span { color: var(--accent); }
+  .lab-prose h2.pwm-h {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 2.4vw, 30px);
+    letter-spacing: -0.02em;
+    margin: 8px 0 14px;
+  }
+  .pwm-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .pwm-tag {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
+    color: var(--text-secondary); background: var(--tag-bg);
+    padding: 5px 11px; border-radius: 20px;
+  }
+  .jrow__viz--pwm { background: #fbfbf9; }
+  .jrow__viz--pwm .jrow__canvas { cursor: default; }
+  .pwm-intro-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1px; background: var(--border); border: 1px solid var(--border);
+    margin: 32px 0; border-radius: 10px; overflow: hidden;
+  }
+  .pwm-intro-grid > div { background: #fff; padding: 22px 20px; }
+  .pwm-intro-grid h4 { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; color: var(--accent); text-transform: uppercase; margin: 0 0 8px; }
+  .pwm-intro-grid p { font-size: 14.5px; line-height: 1.55; color: var(--text-secondary); margin: 0; }
+</style>
+</head>
+<body data-screen-label="Blog · PWM">
+
+<header class="nav">
+  <div class="container nav__inner">
+    <a href="index.html" class="brand" aria-label="Orca Robotics home">
+      <img class="brand__mark-img" src="assets/orca-mark.png" alt="" />
+      <span class="brand__word">Orca Robotics</span>
+    </a>
+    <nav>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="workshops.html">Workshops</a></li>
+        <li><a href="simulators.html">Simulators</a></li>
+        <li><a href="atal-lab.html">Atal Lab</a></li>
+        <li><a href="blog.html" class="is-active">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+    <button type="button" class="btn btn--outline btn--sm nav__cta" data-community-open>Join Community</button>
+    <a href="shop.html" class="btn btn--primary btn--sm nav__cta">Shop</a>
+    <button class="nav__hamburger" aria-label="Open menu"><span></span></button>
+  </div>
+</header>
+
+<div class="lab">
+
+  <div class="lab-head">
+    <a href="blog.html" class="lab-back">← Back to Blog</a>
+    <div class="lab-meta">
+      <span>Interactive</span>
+      <span class="lab-meta__dot"></span>
+      <span>Jul 2026</span>
+      <span class="lab-meta__dot"></span>
+      <span>12 min read</span>
+    </div>
+    <h1 class="lab-title">Pulse width modulation,<br />from the ground up</h1>
+    <p class="lab-dek">A digital pin can only do two things: on, or off. Yet the same pin dims an LED, sets a motor's speed, aims a servo, and even sculpts a sine wave. The trick is <em>timing</em> — and it's called PWM. Six live panels take you from the first square wave to the algorithm inside a motor drive. Drag every slider.</p>
+  </div>
+
+  <div class="lab-prose">
+    <p>Microcontrollers speak in absolutes. A pin is either at the supply voltage or at ground — <strong>5&nbsp;volts or 0&nbsp;volts</strong>, high or low, nothing in between. That is wonderful for logic and useless for the real world, where we want a lamp at <em>half</em> brightness or a motor at <em>a third</em> of full speed.</p>
+    <p>Pulse width modulation is the bridge. Instead of finding a voltage between the two, we flip the pin on and off very fast and control <strong>how much of the time it spends on</strong>. Blink quickly enough and nothing downstream — an LED, a coil, your eye — can keep up with the individual pulses. What they feel is the <strong>average</strong>. Change the ratio of on-time to off-time and you change that average smoothly, from nothing to everything, using a pin that never left its two states.</p>
+    <div class="pwm-intro-grid">
+      <div><h4>Duty cycle</h4><p>The fraction of each cycle the signal is high. This is the knob that sets the average.</p></div>
+      <div><h4>Frequency</h4><p>How many cycles happen per second. Fast enough and the pulses disappear into a steady effect.</p></div>
+      <div><h4>Average</h4><p>What the load actually experiences: duty cycle times the supply voltage.</p></div>
+    </div>
+  </div>
+
+  <!-- 1. Duty cycle -->
+  <div class="jrow">
+    <div class="jrow__info">
+      <span class="jrow__index">Concept 01</span>
+      <span class="jrow__dof">The core idea</span>
+      <h2>Duty cycle</h2>
+      <p class="jrow__desc">Every cycle is split into an ON part and an OFF part. The <strong>duty cycle</strong> is the ON fraction, from 0% to 100%. Slide it and watch the average voltage — the dashed line — rise and fall with it. The LED tracks that average exactly.</p>
+      <div class="jrow__controls">
+        <div class="jctl">
+          <span class="jctl__name">Duty cycle</span>
+          <input type="range" class="joint-slider" id="duty-slider" min="0" max="100" value="35" />
+          <span class="jctl__val" id="duty-slider-val">35%</span>
+        </div>
+      </div>
+      <span class="jrow__hint">Try 0%, 50%, then 100%</span>
+    </div>
+    <div class="jrow__viz jrow__viz--pwm">
+      <span class="jrow__badge">Duty cycle · 5 V</span>
+      <canvas class="jrow__canvas" id="pwm-duty"></canvas>
+    </div>
+  </div>
+
+  <div class="lab-prose">
+    <h2 class="pwm-h">The one equation you actually need</h2>
+    <p>Because the load responds to the average, the whole of basic PWM collapses into a single relationship. If the supply is <strong>V</strong> and the signal is high for a fraction <strong>D</strong> of every cycle, the average voltage delivered is simply their product.</p>
+    <div class="pwm-eq">D  =  <span>t<sub>on</sub></span> / (<span>t<sub>on</sub></span> + <span>t<sub>off</sub></span>)&nbsp;&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;&nbsp;V<sub>avg</sub>  =  D × V<sub>supply</sub></div>
+    <p>At 40% duty on a 5&nbsp;volt supply the load sees 2&nbsp;volts on average. Nothing about the pin changed — it still swings the full 0-to-5. We only changed the <em>schedule</em>.</p>
+  </div>
+
+  <!-- 2. Frequency & period -->
+  <div class="jrow jrow--flip">
+    <div class="jrow__info">
+      <span class="jrow__index">Concept 02</span>
+      <span class="jrow__dof">Timing</span>
+      <h2>Frequency &amp; period</h2>
+      <p class="jrow__desc">Duty sets the <em>average</em>; frequency sets how <em>fast</em> we deliver it. At a few hertz the LED visibly blinks. Raise the frequency and the blink speeds up, blurs, and — past roughly 50&nbsp;Hz — fuses into a steady glow your eye reads as brightness. The average never changed; only your ability to see the seams.</p>
+      <div class="jrow__controls">
+        <div class="jctl">
+          <span class="jctl__name">Frequency</span>
+          <input type="range" class="joint-slider" id="freq-slider" min="1" max="200" value="4" />
+          <span class="jctl__val" id="freq-slider-val">4 Hz</span>
+        </div>
+      </div>
+      <span class="jrow__hint">Crawl it up from 1 Hz and watch the LED fuse</span>
+    </div>
+    <div class="jrow__viz jrow__viz--pwm">
+      <span class="jrow__badge">Frequency · period T = 1/f</span>
+      <canvas class="jrow__canvas" id="pwm-freq"></canvas>
+    </div>
+  </div>
+
+  <div class="lab-prose">
+    <p>Frequency is not a free choice. Too low and everything flickers — lights strobe, motors cog, servos buzz. Too high and switching losses climb and the driving transistor heats up. So every application has a home range: <strong>LEDs</strong> live happily from a few hundred hertz up, <strong>DC motors</strong> often run in the tens of kilohertz to stay silent, and <strong>hobby servos</strong> famously expect exactly <strong>50&nbsp;Hz</strong>. The period, <span class="mono">T = 1/f</span>, is just the length of one cycle in time.</p>
+  </div>
+
+  <!-- 3. Digital to analog -->
+  <div class="jrow">
+    <div class="jrow__info">
+      <span class="jrow__index">Concept 03</span>
+      <span class="jrow__dof">Making it real analog</span>
+      <h2>From pulses to a smooth voltage</h2>
+      <p class="jrow__desc">An LED and a motor average the pulses for us because they're slow. To get a genuinely steady voltage — to drive an amplifier or a sensor — we add a <strong>resistor and capacitor</strong>: a low-pass filter. It literally computes the running average. Heavier smoothing flattens the ripple but reacts more slowly to change.</p>
+      <div class="jrow__controls">
+        <div class="jctl">
+          <span class="jctl__name">Duty cycle</span>
+          <input type="range" class="joint-slider" id="filt-duty" min="0" max="100" value="60" />
+          <span class="jctl__val" id="filt-duty-val">60%</span>
+        </div>
+        <div class="jctl">
+          <span class="jctl__name">Smoothing</span>
+          <input type="range" class="joint-slider" id="filt-tau" min="5" max="95" value="35" />
+          <span class="jctl__val" id="filt-tau-val">medium</span>
+        </div>
+      </div>
+      <span class="jrow__hint">Green trace is the filtered output</span>
+    </div>
+    <div class="jrow__viz jrow__viz--pwm">
+      <span class="jrow__badge">RC low-pass · DAC</span>
+      <canvas class="jrow__canvas" id="pwm-filter"></canvas>
+    </div>
+  </div>
+
+  <div class="lab-prose">
+    <h2 class="pwm-h">How a chip actually builds the wave</h2>
+    <p>No processor sits in a loop toggling a pin and counting microseconds — it would have time for nothing else. Instead a dedicated <strong>hardware timer</strong> does it, free of the CPU. The idea is beautifully simple: a counter ramps up, rolls over, and repeats. Alongside it sits a <strong>compare</strong> value you set. While the counter is below the compare value the pin is high; once it passes, the pin goes low. That's a whole PWM channel, in silicon.</p>
+  </div>
+
+  <!-- 4. Counter + compare -->
+  <div class="jrow jrow--flip">
+    <div class="jrow__info">
+      <span class="jrow__index">Concept 04</span>
+      <span class="jrow__dof">Inside the timer</span>
+      <h2>Counter, compare &amp; resolution</h2>
+      <p class="jrow__desc">The blue ramp is the timer counting from 0 up to its <strong>TOP</strong> value, then wrapping. Where your <strong>compare</strong> level crosses it decides the duty cycle. TOP is set by the <strong>resolution</strong>: an 8-bit timer has 256 steps, a 16-bit timer over 65,000. More bits means finer duty control — but the same fixed set of achievable values.</p>
+      <div class="jrow__controls">
+        <div class="jctl">
+          <span class="jctl__name">Compare</span>
+          <input type="range" class="joint-slider" id="cnt-compare" min="0" max="1000" value="500" />
+          <span class="jctl__val" id="cnt-compare-val"></span>
+        </div>
+        <div class="jctl">
+          <span class="jctl__name">Resolution</span>
+          <input type="range" class="joint-slider" id="cnt-bits" min="4" max="12" value="8" />
+          <span class="jctl__val" id="cnt-bits-val">8-bit</span>
+        </div>
+      </div>
+      <span class="jrow__hint">Drop to 4-bit to see the steps get coarse</span>
+    </div>
+    <div class="jrow__viz jrow__viz--pwm">
+      <span class="jrow__badge">Timer · compare-match</span>
+      <canvas class="jrow__canvas" id="pwm-counter"></canvas>
+    </div>
+  </div>
+
+  <div class="lab-prose">
+    <p>This is why datasheets talk about PWM in <em>bits</em>. Resolution is the number of distinct duty cycles you can command, and at low bit-depth you can feel the gaps — a dimming LED steps instead of glides. The same counter, incidentally, is what makes precise timing possible: because the hardware measures pulse width in fixed clock ticks, it can hit a servo's microsecond target far more reliably than any software loop.</p>
+  </div>
+
+  <!-- 5. Servo -->
+  <div class="jrow">
+    <div class="jrow__info">
+      <span class="jrow__index">Concept 05</span>
+      <span class="jrow__dof">Position, not power</span>
+      <h2>Driving a servo</h2>
+      <p class="jrow__desc">A hobby servo bends the rules: here the pulse <em>width</em> is a command, not an average. Every 20&nbsp;ms it wants one pulse. A <strong>1.0&nbsp;ms</strong> pulse means full one way, <strong>1.5&nbsp;ms</strong> is centre, <strong>2.0&nbsp;ms</strong> is full the other way. The servo's own electronics turn that width into an angle and hold it. Duty cycle here is almost irrelevant — the message is entirely in the timing.</p>
+      <div class="jrow__controls">
+        <div class="jctl">
+          <span class="jctl__name">Pulse width</span>
+          <input type="range" class="joint-slider" id="servo-pw" min="600" max="2400" value="1500" />
+          <span class="jctl__val" id="servo-pw-val">1500 µs</span>
+        </div>
+      </div>
+      <span class="jrow__hint">1500 µs is dead centre</span>
+    </div>
+    <div class="jrow__viz jrow__viz--pwm">
+      <span class="jrow__badge">Servo · 50 Hz pulse position</span>
+      <canvas class="jrow__canvas" id="pwm-servo"></canvas>
+    </div>
+  </div>
+
+  <div class="lab-prose">
+    <h2 class="pwm-h">The advanced move: painting a sine wave</h2>
+    <p>If PWM only ever made a steady average, it would stop here. But the average can <em>change over time</em>. Vary the duty cycle smoothly — high, then low, then high again, following a sine curve — and the filtered output becomes an actual <strong>alternating voltage</strong>. This is <strong>sinusoidal PWM</strong>, and it's how a battery drives a three-phase motor, how a solar inverter makes grid AC, and how a class-D amplifier reproduces music.</p>
+    <p>The mechanism is a comparator race. A slow <strong>reference sine</strong> is compared against a fast <strong>triangle carrier</strong>. Whenever the sine is above the triangle, the output is high; otherwise low. Because the sine spends more time near its peaks, the pulses fatten there and thin near the troughs — and the average, once filtered, is the sine itself.</p>
+  </div>
+
+  <!-- 6. SPWM -->
+  <div class="jrow jrow--flip">
+    <div class="jrow__info">
+      <span class="jrow__index">Concept 06 · Advanced</span>
+      <span class="jrow__dof">Synthesis</span>
+      <h2>Sinusoidal PWM</h2>
+      <p class="jrow__desc">Top: a <strong>reference sine</strong> (blue) racing a <strong>triangle carrier</strong> (grey). Middle: the comparator output — a PWM train whose width breathes with the sine. Bottom: run that through a filter and the sine reappears. <strong>Modulation index</strong> scales the sine's amplitude; the <strong>carrier ratio</strong> sets how many switching pulses fit into one output cycle.</p>
+      <div class="jrow__controls">
+        <div class="jctl">
+          <span class="jctl__name">Modulation index</span>
+          <input type="range" class="joint-slider" id="spwm-m" min="10" max="100" value="80" />
+          <span class="jctl__val" id="spwm-m-val">0.80</span>
+        </div>
+        <div class="jctl">
+          <span class="jctl__name">Carrier ratio</span>
+          <input type="range" class="joint-slider" id="spwm-ratio" min="6" max="40" value="15" />
+          <span class="jctl__val" id="spwm-ratio-val">15×</span>
+        </div>
+      </div>
+      <span class="jrow__hint">Push the index past 1.0 to see clipping</span>
+    </div>
+    <div class="jrow__viz jrow__viz--pwm">
+      <span class="jrow__badge">SPWM · inverter core</span>
+      <canvas class="jrow__canvas" id="pwm-spwm"></canvas>
+    </div>
+  </div>
+
+  <div class="lab-prose">
+    <p><strong>From one square wave to a whole waveform.</strong> That is the arc of PWM. A pin that can only choose between two voltages, switched on a schedule, gives you a dimmer, a throttle, a positioner, a digital-to-analog converter, and finally an AC source. The hardware never got more capable. We just got smarter about <em>when</em> to flip the switch.</p>
+    <div class="pwm-tags">
+      <span class="pwm-tag">duty cycle</span>
+      <span class="pwm-tag">frequency</span>
+      <span class="pwm-tag">RC filter</span>
+      <span class="pwm-tag">timer / compare</span>
+      <span class="pwm-tag">resolution</span>
+      <span class="pwm-tag">servo control</span>
+      <span class="pwm-tag">SPWM</span>
+      <span class="pwm-tag">inverters</span>
+    </div>
+  </div>
+
+  <div class="lab-cta">
+    <span class="lab-cta__eyebrow">Put it in your hands</span>
+    <h3>The 2DOF Robotic Arm</h3>
+    <p>Two servos, real PWM, and a guidebook that derives duty cycle, timer resolution, and pulse timing from first principles — then has you drive them yourself.</p>
+    <a href="product-2dof.html" class="btn btn--primary">View the Kit <span class="arrow"></span></a>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div>Orca Robotics © 2026</div>
+    <ul class="footer__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="workshops.html">Workshops</a></li>
+      <li><a href="simulators.html">Simulators</a></li>
+      <li><a href="atal-lab.html">Atal Lab</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+    </ul>
+    <div class="footer__right"><a href="mailto:info@orcarobotics.in">info@orcarobotics.in</a></div>
+  </div>
+</footer>
+
+<script src="scripts.js"></script>
+<script src="blog-pwm.js"></script>
+</body>
+</html>

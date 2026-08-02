@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Blog — ORCA Robotics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body data-screen-label="Blog">
+
+<header class="nav">
+  <div class="container nav__inner">
+    <a href="index.html" class="brand" aria-label="Orca Robotics home">
+      <img class="brand__mark-img" src="assets/orca-mark.png" alt="" />
+      <span class="brand__word">Orca Robotics</span>
+    </a>
+    <nav>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="workshops.html">Workshops</a></li>
+        <li><a href="simulators.html">Simulators</a></li>
+        <li><a href="atal-lab.html">Atal Lab</a></li>
+        <li><a href="blog.html" class="is-active">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+    <button type="button" class="btn btn--outline btn--sm nav__cta" data-community-open>Join Community</button>
+    <a href="shop.html" class="btn btn--primary btn--sm nav__cta">Shop</a>
+    <button class="nav__hamburger" aria-label="Open menu"><span></span></button>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <span class="eyebrow">— Page 06 / Blog</span>
+    <h1>Blog.</h1>
+    <p class="lead">Build logs, teaching notes, and field reports from the workshop floor. Written by the people who design the kits.</p>
+  </div>
+</section>
+
+<section class="section section--first">
+  <div class="container">
+
+    <!-- Featured post -->
+    <a class="blog-featured reveal" href="blog-pwm.html">
+      <div class="blog-featured__media">
+        <img src="assets/electronics-cover.jpg" alt="A microcontroller board driving signals" onerror="this.onerror=null;this.src='assets/6dof-arm.png'" />
+      </div>
+      <div class="blog-featured__body">
+        <div class="blog-featured__meta">
+          <span class="tag">Interactive · Electronics</span>
+          <span class="blog-meta-date">JUL 2026</span>
+        </div>
+        <h3>Pulse width modulation, from the ground up</h3>
+        <p class="blog-featured__dek">A digital pin can only be on or off — yet it dims LEDs, sets motor speed, aims servos, and even sculpts a sine wave. Six live panels take you from the first square wave to the sinusoidal PWM inside a motor drive. Drag every slider.</p>
+        <div class="blog-featured__foot">
+          <span class="blog-meta-date">12 MIN READ · INTERACTIVE</span>
+          <span class="sim-card__launch">Read Article →</span>
+        </div>
+      </div>
+    </a>
+
+    <div class="blog-grid reveal" style="margin-top:28px;">
+      <a class="blog-card" href="blog-robot-joints.html">
+        <div class="blog-card__media">
+          <img src="assets/6dof-arm.png" alt="A 6-axis robotic arm showing multiple joints" />
+        </div>
+        <div class="blog-card__body">
+          <div class="blog-featured__meta">
+            <span class="tag">Interactive · Robotics</span>
+            <span class="blog-meta-date">JUN 2026</span>
+          </div>
+          <h3 class="blog-card__title">The joints that make a robot move</h3>
+          <p class="blog-card__desc">Six joint types rendered in 3D — revolute, prismatic, cylindrical, screw, spherical, and a 2DOF arm. Orbit each one and drive it yourself.</p>
+          <div class="blog-featured__foot">
+            <span class="blog-meta-date">6 MIN READ · 3D</span>
+            <span class="sim-card__launch">Read Article →</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div>Orca Robotics © 2026</div>
+    <ul class="footer__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="workshops.html">Workshops</a></li>
+      <li><a href="simulators.html">Simulators</a></li>
+      <li><a href="atal-lab.html">Atal Lab</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+    </ul>
+    <div class="footer__right"><a href="mailto:info@orcarobotics.in">info@orcarobotics.in</a></div>
+  </div>
+</footer>
+
+<script src="scripts.js"></script>
+</body>
+</html>

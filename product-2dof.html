@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>2DOF Robotic Arm — Orca Robotics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+.pdp { padding: 40px 0 80px; }
+
+.pdp__top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: start;
+  padding-bottom: 56px;
+  border-bottom: 1px solid var(--border);
+}
+.pdp__gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 88px;
+  align-self: start;
+}
+.pdp__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+.pdp__main-img {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pdp__main-img img { width: 100%; height: 100%; object-fit: contain; padding: 32px; display: block; }
+
+.pdp__tag-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.pdp__num { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; }
+.pdp__title {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(22px, 2.8vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+.pdp__subtitle {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pdp__features {
+  list-style: none; padding: 0; margin: 0 0 24px;
+  display: flex; flex-direction: column; gap: 9px;
+}
+.pdp__features li {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 11px;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+.pdp__features li::before {
+  content: "→";
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  padding-top: 2px;
+}
+
+.pdp__buy {
+  border: 1px solid var(--border);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pdp__price-row { display: flex; align-items: baseline; gap: 12px; }
+.pdp__price {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--text-primary);
+}
+.pdp__avail {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pdp__avail::before {
+  content: none;
+}
+.pdp__buy-actions { display: flex; flex-direction: column; gap: 10px; }
+
+.pdp__btn-cart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 46px;
+  background: #f0c14b;
+  border: 1px solid #a88734;
+  color: #111;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.18s;
+}
+.pdp__btn-cart:hover { background: #e8b830; }
+.pdp__btn-buy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 46px;
+  background: #e87722;
+  border: 1px solid #c45f0a;
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.18s;
+}
+.pdp__btn-buy:hover { background: #d4681a; }
+
+/* ── Sections ── */
+.pdp__section {
+  padding: 48px 0;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 48px;
+}
+.pdp__section-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text-primary);
+  padding-top: 4px;
+}
+.pdp__body {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+}
+.pdp__body p { margin: 0 0 14px; }
+.pdp__body p:last-child { margin: 0; }
+.pdp__body strong { color: var(--text-primary); }
+
+/* Covers list */
+.activity-list {
+  list-style: none; padding: 0; margin: 16px 0 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px;
+}
+.activity-list li {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+.activity-list li::before {
+  content: "→";
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  padding-top: 2px;
+}
+
+/* Components table */
+.comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 16px;
+}
+.comp-table thead tr { background: var(--text-primary); }
+.comp-table thead td {
+  padding: 10px 14px;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--text-primary);
+}
+.comp-table tbody tr:nth-child(even) td { background: var(--bg); }
+.comp-table tbody td {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--text-primary);
+}
+.comp-table tbody td:last-child {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: center;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* FAQ */
+.faq-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
+.faq-item {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+}
+.faq-item:first-child { border-top: 1px solid var(--border); }
+.faq-q {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+.faq-a {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Specs table */
+.specs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.specs-table tr:nth-child(odd) td { background: var(--bg); }
+.specs-table td {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.specs-table td:first-child {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  width: 38%;
+}
+.specs-table td:last-child { font-weight: 500; color: var(--text-primary); }
+
+/* Related */
+.related-strip {
+  border: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  overflow: hidden;
+}
+.related-strip:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.related-strip__img {
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.related-strip__img img { width: 100%; height: 100%; object-fit: contain; padding: 16px; }
+.related-strip__body { padding: 20px 24px; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+.related-strip__num { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.related-strip__title { font-family: var(--font-display); font-weight: 700; font-size: 16px; }
+.related-strip__desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; }
+
+@media (max-width: 860px) {
+  .pdp__top { grid-template-columns: 1fr; gap: 32px; }
+  .pdp__gallery { position: static; }
+  .pdp__section { grid-template-columns: 1fr; gap: 20px; }
+  .activity-list { grid-template-columns: 1fr; }
+  .related-strip { grid-template-columns: 120px 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav__inner">
+    <a href="index.html" class="brand" aria-label="Orca Robotics home">
+      <img class="brand__mark-img" src="assets/orca-mark.png" alt="" />
+      <span class="brand__word">Orca Robotics</span>
+    </a>
+    <nav>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="workshops.html">Workshops</a></li>
+        <li><a href="simulators.html">Simulators</a></li>
+        <li><a href="atal-lab.html">Atal Lab</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+    <button type="button" class="btn btn--outline btn--sm nav__cta" data-community-open>Join Community</button>
+    <a href="shop.html" class="btn btn--primary btn--sm nav__cta">Shop</a>
+    <button class="nav__hamburger" aria-label="Open menu"><span></span></button>
+  </div>
+</header>
+
+<!-- Breadcrumb -->
+<div style="border-bottom:1px solid var(--border);padding:10px 0;background:var(--surface);">
+  <div class="container" style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:0.08em;color:var(--text-muted);">
+    <a href="shop.html" style="color:var(--text-muted);text-decoration:none;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">Shop</a>
+    <span>›</span>
+    <span style="color:var(--text-primary);">2DOF Robotic Arm</span>
+  </div>
+</div>
+
+<main class="pdp">
+  <div class="container">
+
+    <!-- Top: image + info -->
+    <div class="pdp__top">
+
+      <!-- Gallery -->
+      <div class="pdp__gallery">
+        <div class="pdp__main-img">
+          <img src="assets/2dof-arm.png" alt="2DOF Robotic Arm" />
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="pdp__info">
+        <div class="pdp__tag-row">
+          <span class="pdp__num">P—02</span>
+          <span class="tag">Book + Kit</span>
+        </div>
+        <h1 class="pdp__title">2DOF Robotic Arm</h1>
+        <p class="pdp__subtitle">Build a real robotic arm. Understand how it moves — from joint angles to inverse kinematics — by deriving every equation yourself.</p>
+
+        <ul class="pdp__features">
+          <li>60-page illustrated guidebook — built from first principles, no black boxes</li>
+          <li>Real 2DOF robotic arm — not a simulation</li>
+          <li>Control via serial monitor using ESP8266 NodeMCU</li>
+          <li>All components included — nothing extra to buy</li>
+          <li>Covers: robotics foundations, DH parameters, forward kinematics, inverse kinematics, assembly, wiring, and programming</li>
+          <li>120 mm reach across two 60 mm links — beginner to intermediate level</li>
+          <li>For Class 11–12 students, UG engineers, robotics beginners, and makers</li>
+          <li>Made in India</li>
+        </ul>
+
+        <div class="pdp__buy">
+          <div class="pdp__price-row">
+            <div class="pdp__price">₹1,999</div>
+          </div>
+          <div class="pdp__avail">ships within 5–7 business days</div>
+          <div class="pdp__buy-actions">
+            <!-- Shopify Buy Button -->
+            <div id='product-component-1781337703071'></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">About this item</div>
+      <div class="pdp__body">
+        <p>Most people who build robots follow instructions. They wire things up, upload some code, watch it move — and never stop to ask why.</p>
+        <p>The 2DOF Robotic Arm is built around that question. The guidebook starts from what a robot actually is and builds up from there — <strong>links, joints, degrees of freedom, DH parameters, forward and inverse kinematics</strong> — every concept derived from first principles, no black boxes. Then you build the arm, wire the circuit, upload the code, and command it through the serial monitor, watching the mathematics come alive in a physical arm moving to exactly the right spot.</p>
+        <p>By the end, you will not just have built a robot kit. You will understand every reason why it works — and finish with an ORCA Robotics Certificate of Completion to show for it.</p>
+      </div>
+    </div>
+
+    <!-- Who it's for -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">Who this is for</div>
+      <ul class="pdp__features" style="margin:0;">
+        <li>Class 11–12 students who want to understand how robots actually move, not just build one from a manual</li>
+        <li>Engineering students (Mech, ECE, CS, Robotics) building a real foundation in kinematics and embedded systems</li>
+        <li>Hobbyists who have seen robotic arms online and want to understand the mathematics behind them</li>
+        <li>Makers and tinkerers ready to go beyond tutorials and think from first principles</li>
+        <li>Lab coordinators looking for a self-contained, structured robotics project kit</li>
+      </ul>
+    </div>
+
+    <!-- What the guidebook covers -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">What the guidebook covers</div>
+      <div>
+        <p class="pdp__body" style="margin-bottom:0;">From what a robot fundamentally is, through the mathematics of motion, all the way into assembly, wiring, and code. Every concept is derived from first principles — no black boxes.</p>
+        <ul class="activity-list">
+          <li>What a robot is</li>
+          <li>Degrees of freedom</li>
+          <li>Links and joints</li>
+          <li>DH parameters</li>
+          <li>Forward kinematics</li>
+          <li>Inverse kinematics</li>
+          <li>Assembly</li>
+          <li>Circuit connections</li>
+          <li>Programming setup</li>
+          <li>Programming guide</li>
+          <li>Code walkthrough</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- What's in the box -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">What's in the box</div>
+      <div>
+        <p class="pdp__body" style="margin-bottom:16px;">Everything required to assemble and control the arm. No additional purchases needed.</p>
+        <table class="comp-table">
+          <thead>
+            <tr><td>Component</td><td>Qty</td></tr>
+          </thead>
+          <tbody>
+            <tr><td>Complete Guidebook (physical)</td><td>1</td></tr>
+            <tr><td>SG90 Servo Motor</td><td>2</td></tr>
+            <tr><td>ESP8266 NodeMCU</td><td>1</td></tr>
+            <tr><td>Robot Arms</td><td>2</td></tr>
+            <tr><td>Robot Base</td><td>1</td></tr>
+            <tr><td>End Effector</td><td>1</td></tr>
+            <tr><td>5V DC Power Supply</td><td>1</td></tr>
+            <tr><td>DC Jack</td><td>1</td></tr>
+            <tr><td>Breadboard</td><td>1</td></tr>
+            <tr><td>Jumper Wires</td><td>10</td></tr>
+            <tr><td>USB Cable</td><td>1</td></tr>
+            <tr><td>Robot Control Program</td><td>Included</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">FAQ</div>
+      <ul class="faq-list">
+        <li class="faq-item">
+          <div class="faq-q">Do I need prior robotics or coding experience?</div>
+          <p class="faq-a">No. The guidebook starts from what a robot actually is and builds up from there through the mathematics and into the build. Basic familiarity with a computer is enough to get started.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">Does the kit come pre-assembled?</div>
+          <p class="faq-a">No — and that's intentional. Assembling the arm yourself is part of how the learning happens. The guidebook walks you through every step with images.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">What software do I need?</div>
+          <p class="faq-a">Arduino IDE, which is free to download. The control program is included — you flash it to the NodeMCU via USB.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">What does the serial monitor control do?</div>
+          <p class="faq-a">You type X and Y coordinates into the Arduino IDE's serial monitor, the arm runs inverse kinematics, calculates the required joint angles, and moves to that position. You can also switch between elbow-up and elbow-down configurations and control movement speed.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">What mathematics does the guidebook cover?</div>
+          <p class="faq-a">Forward kinematics (finding where the end effector is given joint angles) and inverse kinematics (finding the joint angles needed to reach a target point), both derived from first principles using trigonometry and the cosine rule. DH parameters are also covered in full.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">How do I contact you?</div>
+          <p class="faq-a">Instagram: <a href="https://instagram.com/orca.robotics" style="color:var(--accent);">@orca.robotics</a> &nbsp;|&nbsp; Email: <a href="mailto:info@orcarobotics.in" style="color:var(--accent);">info@orcarobotics.in</a></p>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Related -->
+    <div class="pdp__section" style="border-bottom:none;padding-bottom:0;">
+      <div class="pdp__section-label">Also in the shop</div>
+      <a class="related-strip" href="product-electronics.html">
+        <div class="related-strip__img">
+          <img src="assets/electronics-cover.jpg" alt="Basic Electronics Learning System" />
+        </div>
+        <div class="related-strip__body">
+          <div class="related-strip__num">P—01</div>
+          <div class="related-strip__title">Basic Electronics Learning System</div>
+          <p class="related-strip__desc">590+ page handbook + complete component kit and a real oscilloscope. 43 hands-on activities for Class 11–12 &amp; UG students.</p>
+          <span class="btn btn--outline btn--sm" style="margin-top:8px;display:inline-flex;">View Product <span class="arrow"></span></span>
+        </div>
+      </a>
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div>Orca Robotics © 2025</div>
+    <ul class="footer__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="workshops.html">Workshops</a></li>
+      <li><a href="simulators.html">Simulators</a></li>
+      <li><a href="atal-lab.html">Atal Lab</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+    </ul>
+    <div class="footer__right"><a href="mailto:info@orcarobotics.in">info@orcarobotics.in</a></div>
+  </div>
+</footer>
+
+<script src="scripts.js"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+(function () {
+  var scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
+  if (window.ShopifyBuy) {
+    if (window.ShopifyBuy.UI) {
+      ShopifyBuyInit();
+    } else {
+      loadScript();
+    }
+  } else {
+    loadScript();
+  }
+  function loadScript() {
+    var script = document.createElement('script');
+    script.async = true;
+    script.src = scriptURL;
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(script);
+    script.onload = ShopifyBuyInit;
+  }
+  function ShopifyBuyInit() {
+    var client = ShopifyBuy.buildClient({
+      domain: 's1nbge-re.myshopify.com',
+      storefrontAccessToken: 'be50d2289ab65427b570af0332d10844',
+    });
+    ShopifyBuy.UI.onReady(client).then(function (ui) {
+      ui.createComponent('product', {
+        id: '9186442969345',
+        node: document.getElementById('product-component-1781337703071'),
+        moneyFormat: 'Rs.%20%7B%7Bamount%7D%7D',
+        options: {
+  "product": {
+    "styles": {
+      "product": {
+        "text-align": "left",
+        "@media (min-width: 601px)": {
+          "max-width": "calc(25% - 20px)",
+          "margin-left": "0px",
+          "margin-bottom": "50px"
+        }
+      },
+      "button": {
+        "font-family": "Oxygen, sans-serif",
+        "font-weight": "bold",
+        ":hover": {
+          "background-color": "#d16b1f"
+        },
+        "background-color": "#e87722",
+        ":focus": {
+          "background-color": "#d16b1f"
+        },
+        "border-radius": "16px"
+      }
+    },
+    "contents": {
+      "img": false,
+      "title": false,
+      "price": false
+    },
+    "text": {
+      "button": "Add to cart"
+    },
+    "googleFonts": [
+      "Oxygen"
+    ]
+  },
+  "productSet": {
+    "styles": {
+      "products": {
+        "@media (min-width: 601px)": {
+          "margin-left": "-20px"
+        }
+      }
+    }
+  },
+  "modalProduct": {
+    "contents": {
+      "img": false,
+      "imgWithCarousel": true,
+      "button": false,
+      "buttonWithQuantity": true
+    },
+    "styles": {
+      "product": {
+        "@media (min-width: 601px)": {
+          "max-width": "100%",
+          "margin-left": "0px",
+          "margin-bottom": "0px"
+        }
+      },
+      "button": {
+        "font-family": "Oxygen, sans-serif",
+        "font-weight": "bold",
+        ":hover": {
+          "background-color": "#d16b1f"
+        },
+        "background-color": "#e87722",
+        ":focus": {
+          "background-color": "#d16b1f"
+        },
+        "border-radius": "16px"
+      }
+    },
+    "googleFonts": [
+      "Oxygen"
+    ],
+    "text": {
+      "button": "Add to cart"
+    }
+  },
+  "option": {},
+  "cart": {
+    "styles": {
+      "button": {
+        "font-family": "Oxygen, sans-serif",
+        "font-weight": "bold",
+        ":hover": {
+          "background-color": "#d16b1f"
+        },
+        "background-color": "#e87722",
+        ":focus": {
+          "background-color": "#d16b1f"
+        },
+        "border-radius": "16px"
+      }
+    },
+    "text": {
+      "total": "Subtotal",
+      "button": "Checkout"
+    },
+    "googleFonts": [
+      "Oxygen"
+    ]
+  },
+  "toggle": {
+    "styles": {
+      "toggle": {
+        "font-family": "Oxygen, sans-serif",
+        "font-weight": "bold",
+        "background-color": "#e87722",
+        ":hover": {
+          "background-color": "#d16b1f"
+        },
+        ":focus": {
+          "background-color": "#d16b1f"
+        }
+      }
+    },
+    "googleFonts": [
+      "Oxygen"
+    ]
+  }
+},
+      });
+    });
+  }
+})();
+/*]]>*/
+</script>
+</body>
+</html>

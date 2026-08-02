@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Privacy Policy — ORCA Robotics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  /* ---------- Legal / policy document ---------- */
+  .legal { padding: 64px 0 110px; }
+  .legal__layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 64px;
+    align-items: start;
+  }
+  .legal__toc {
+    position: sticky;
+    top: 96px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    border-left: 1px solid var(--border);
+    padding-left: 18px;
+  }
+  .legal__toc-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .legal__toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+  .legal__toc a { color: var(--text-secondary); text-decoration: none; transition: color .15s; }
+  .legal__toc a:hover { color: var(--accent); }
+  .legal__body { max-width: 720px; }
+  .legal__body > section { padding-top: 14px; }
+  .legal__body > section + section {
+    margin-top: 40px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+  }
+  .legal__body h2 {
+    font-size: clamp(20px, 2.2vw, 26px);
+    line-height: 1.2;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .legal__body h2 .legal__num {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    flex: none;
+  }
+  .legal__body h3 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    margin: 22px 0 8px;
+  }
+  .legal__body p { font-size: 16px; line-height: 1.68; color: var(--text-secondary); }
+  .legal__body a { color: var(--text-primary); text-decoration: underline; text-underline-offset: 2px; }
+  .legal__body a:hover { color: var(--accent); }
+  .legal__body ul {
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .legal__body li {
+    position: relative;
+    padding-left: 22px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+  .legal__body li::before {
+    content: "";
+    position: absolute;
+    left: 2px; top: 11px;
+    width: 6px; height: 6px;
+    background: var(--accent);
+  }
+  .legal__contact {
+    margin-top: 16px;
+    padding: 24px 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .legal__contact p { margin: 0; color: var(--text-primary); font-size: 15px; line-height: 1.7; }
+  .legal__meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-top: 18px;
+  }
+  @media (max-width: 860px) {
+    .legal__layout { grid-template-columns: 1fr; gap: 36px; }
+    .legal__toc { position: static; border-left: none; border-top: 1px solid var(--border); padding-left: 0; padding-top: 24px; order: 2; }
+    .legal__body { order: 1; }
+  }
+</style>
+</head>
+<body data-screen-label="Privacy Policy">
+
+<header class="nav">
+  <div class="container nav__inner">
+    <a href="index.html" class="brand" aria-label="Orca Robotics home">
+      <img class="brand__mark-img" src="assets/orca-mark.png" alt="" />
+      <span class="brand__word">Orca Robotics</span>
+    </a>
+    <nav>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="workshops.html">Workshops</a></li>
+        <li><a href="simulators.html">Simulators</a></li>
+        <li><a href="atal-lab.html">Atal Lab</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+    <button type="button" class="btn btn--outline btn--sm nav__cta" data-community-open>Join Community</button>
+    <a href="shop.html" class="btn btn--primary btn--sm nav__cta">Shop</a>
+    <button class="nav__hamburger" aria-label="Open menu"><span></span></button>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <span class="eyebrow">— Legal / Privacy</span>
+    <h1>Privacy Policy.</h1>
+    <p class="lead">How ORCA Robotics LLP collects, uses, and protects the information you share when you visit or interact with orcarobotics.in.</p>
+    <div class="legal__meta">Effective Date · 29 June 2026</div>
+  </div>
+</section>
+
+<section class="legal">
+  <div class="container">
+    <div class="legal__layout">
+
+      <aside class="legal__toc">
+        <div class="legal__toc-label">Contents</div>
+        <ol>
+          <li><a href="#s1">01&nbsp;&nbsp;&nbsp;Introduction</a></li>
+          <li><a href="#s2">02&nbsp;&nbsp;&nbsp;Information We Collect</a></li>
+          <li><a href="#s3">03&nbsp;&nbsp;&nbsp;How We Use It</a></li>
+          <li><a href="#s4">04&nbsp;&nbsp;&nbsp;Third-Party Services</a></li>
+          <li><a href="#s5">05&nbsp;&nbsp;&nbsp;Sharing of Information</a></li>
+          <li><a href="#s6">06&nbsp;&nbsp;&nbsp;Payment Information</a></li>
+          <li><a href="#s7">07&nbsp;&nbsp;&nbsp;Data Retention</a></li>
+          <li><a href="#s8">08&nbsp;&nbsp;&nbsp;Children's Privacy</a></li>
+          <li><a href="#s9">09&nbsp;&nbsp;&nbsp;Your Rights</a></li>
+          <li><a href="#s10">10&nbsp;&nbsp;&nbsp;Security</a></li>
+          <li><a href="#s11">11&nbsp;&nbsp;&nbsp;Changes</a></li>
+          <li><a href="#s12">12&nbsp;&nbsp;&nbsp;Contact Us</a></li>
+        </ol>
+      </aside>
+
+      <div class="legal__body">
+
+        <section id="s1">
+          <h2><span class="legal__num">01</span>Introduction</h2>
+          <p>ORCA Robotics LLP ("ORCA Robotics", "we", "us", or "our") operates the website orcarobotics.in. This Privacy Policy explains how we collect, use, and protect information you provide when you visit or interact with our website. By using our website, you agree to the terms of this Privacy Policy. If you do not agree, please refrain from using the website.</p>
+        </section>
+
+        <section id="s2">
+          <h2><span class="legal__num">02</span>Information We Collect</h2>
+          <p>We collect the following types of information:</p>
+          <h3>a) Personal Information</h3>
+          <p>Information you voluntarily provide through our contact form, which may include:</p>
+          <ul>
+            <li>Your name</li>
+            <li>Email address</li>
+            <li>Phone number</li>
+            <li>Institution or organisation name</li>
+            <li>The message or inquiry you submit</li>
+          </ul>
+          <h3>b) Log Data</h3>
+          <p>Like many website operators, we may automatically receive and record information that your browser sends when you visit our site. This Log Data may include your computer's Internet Protocol (IP) address, browser type and version, the pages of our site you visit, the time and date of your visit, time spent on those pages, and other usage statistics. This data is used solely for maintaining and improving the website.</p>
+          <h3>c) Cookies</h3>
+          <p>Our website may use cookies — small data files stored on your browser — to improve your experience. Cookies may include an anonymous unique identifier. You can instruct your browser to refuse all cookies or notify you when a cookie is being sent. Please note that some features of the website may not function properly if cookies are disabled.</p>
+        </section>
+
+        <section id="s3">
+          <h2><span class="legal__num">03</span>How We Use Your Information</h2>
+          <p>The information we collect is used for the following purposes:</p>
+          <ul>
+            <li>To respond to your inquiry or service request</li>
+            <li>To provide information about our products, kits, handbooks, and workshop services</li>
+            <li>To process orders or institutional purchase discussions</li>
+            <li>To maintain and improve our website and services</li>
+            <li>To monitor usage of our website</li>
+            <li>To send newsletters or marketing communications, where you have opted in (you may opt out at any time by contacting us)</li>
+          </ul>
+        </section>
+
+        <section id="s4">
+          <h2><span class="legal__num">04</span>Third-Party Services</h2>
+          <p>We may employ third-party companies and service providers to facilitate our website and services, including web hosting and payment processing. These third parties have access to your information only to perform specific tasks on our behalf and are obligated not to disclose or use it for any other purpose.</p>
+          <p>Our website is hosted on Hostinger, which may collect standard server-level data such as IP addresses and traffic statistics as part of its hosting infrastructure. This data is governed by Hostinger's privacy policy.</p>
+          <p>Payment processing is handled by Razorpay and/or Cashfree, subject to their respective privacy policies.</p>
+        </section>
+
+        <section id="s5">
+          <h2><span class="legal__num">05</span>Sharing of Information</h2>
+          <p>We do not sell, rent, or trade your personal information to any third party. We may share your information only in the following limited circumstances:</p>
+          <ul>
+            <li>With our co-founders or internal team members at ORCA Robotics LLP, solely for the purpose of responding to your inquiry</li>
+            <li>With payment processors (such as Razorpay or Cashfree) when you make a purchase, subject to their respective privacy policies</li>
+            <li>If required by law or a government authority under applicable Indian law</li>
+          </ul>
+        </section>
+
+        <section id="s6">
+          <h2><span class="legal__num">06</span>Payment Information</h2>
+          <p>When you make a purchase, payments are processed through third-party gateways including Razorpay and Cashfree. We do not store your card details, UPI credentials, or any sensitive payment information on our servers. For institutional orders, bank transfer details are shared directly via email and are not stored on the website.</p>
+        </section>
+
+        <section id="s7">
+          <h2><span class="legal__num">07</span>Data Retention</h2>
+          <p>We retain contact form submissions only as long as necessary to address your inquiry and for reasonable follow-up. You may request deletion of your information at any time by writing to us at <a href="mailto:support@orcarobotics.in">support@orcarobotics.in</a>.</p>
+        </section>
+
+        <section id="s8">
+          <h2><span class="legal__num">08</span>Children's Privacy</h2>
+          <p>Our website is not directed at children under the age of 13. We do not knowingly collect personal information from minors. If you believe a minor has submitted information to us, please contact us and we will delete it promptly.</p>
+        </section>
+
+        <section id="s9">
+          <h2><span class="legal__num">09</span>Your Rights</h2>
+          <p>Under applicable Indian law, including the Digital Personal Data Protection Act, 2023 (once notified), you have the right to:</p>
+          <ul>
+            <li>Access the personal data we hold about you</li>
+            <li>Correct inaccurate information</li>
+            <li>Request deletion of your personal data</li>
+          </ul>
+          <p>To exercise any of these rights, please contact us at <a href="mailto:support@orcarobotics.in">support@orcarobotics.in</a>.</p>
+        </section>
+
+        <section id="s10">
+          <h2><span class="legal__num">10</span>Security</h2>
+          <p>We take reasonable precautions to protect your information from unauthorised access or disclosure. However, no method of transmission over the internet is completely secure, and we cannot guarantee absolute security.</p>
+        </section>
+
+        <section id="s11">
+          <h2><span class="legal__num">11</span>Changes to This Policy</h2>
+          <p>We may update this Privacy Policy from time to time. The updated version will be posted on this page with a revised effective date. We encourage you to review this page periodically.</p>
+        </section>
+
+        <section id="s12">
+          <h2><span class="legal__num">12</span>Contact Us</h2>
+          <p>If you have any questions or concerns about this Privacy Policy, please contact us at:</p>
+          <div class="legal__contact">
+            <p>
+              <strong>ORCA Robotics LLP</strong><br />
+              Hubballi, Karnataka, India<br />
+              Email: <a href="mailto:support@orcarobotics.in">support@orcarobotics.in</a><br />
+              Website: <a href="index.html">orcarobotics.in</a>
+            </p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div>Orca Robotics © 2026</div>
+    <ul class="footer__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="workshops.html">Workshops</a></li>
+      <li><a href="simulators.html">Simulators</a></li>
+      <li><a href="atal-lab.html">Atal Lab</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+    </ul>
+    <div class="footer__right"><a href="mailto:info@orcarobotics.in">info@orcarobotics.in</a></div>
+  </div>
+</footer>
+
+<script src="scripts.js"></script>
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shop — Orca Robotics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+.product-card--compact { min-height: 0; gap: 12px; padding: 20px; }
+.product-card--compact .product-card__photo { aspect-ratio: 4/3; }
+.grid-2:has(.product-card--compact) { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 860px) {
+  .grid-2:has(.product-card--compact) { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 540px) {
+  .grid-2:has(.product-card--compact) { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body data-screen-label="Shop">
+
+<header class="nav">
+  <div class="container nav__inner">
+    <a href="index.html" class="brand" aria-label="Orca Robotics home">
+      <img class="brand__mark-img" src="assets/orca-mark.png" alt="" />
+      <span class="brand__word">Orca Robotics</span>
+    </a>
+    <nav>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="workshops.html">Workshops</a></li>
+        <li><a href="simulators.html">Simulators</a></li>
+        <li><a href="atal-lab.html">Atal Lab</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+    <button type="button" class="btn btn--outline btn--sm nav__cta" data-community-open>Join Community</button>
+    <a href="shop.html" class="btn btn--primary btn--sm nav__cta is-active">Shop</a>
+    <button class="nav__hamburger" aria-label="Open menu"><span></span></button>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <span class="eyebrow">— Shop</span>
+    <h1>Shop.</h1>
+    <p class="lead">Handbooks, kits, and hardware. Built for engineering students who want to build, not just read.</p>
+  </div>
+</section>
+
+<section class="section section--first">
+  <div class="container">
+    <div class="section__head">
+      <div>
+        <span class="eyebrow">— All Products</span>
+        <h2>Ready to build?</h2>
+      </div>
+      <span class="count">02 ITEMS</span>
+    </div>
+
+    <div class="grid-2 reveal-group">
+
+      <!-- 01 Basic Electronics Learning System -->
+      <article class="card product-card product-card--compact" style="cursor:pointer;" onclick="location.href='product-electronics.html'">
+        <div class="product-card__head">
+          <span class="product-card__num">P—01</span>
+          <span class="tag">Book + Kit</span>
+        </div>
+        <div class="product-card__photo">
+          <img src="assets/electronics-cover.jpg" alt="Basic Electronics Learning System" style="width:100%;height:100%;object-fit:cover;" />
+        </div>
+        <h3 style="font-size:17px;">Basic Electronics Learning System</h3>
+        <p class="product-card__desc" style="font-size:13px;">~600 pages. 35+ hands-on activities. From passive components to rectifiers — paired with every component you need.</p>
+        <div class="product-card__foot">
+          <span class="product-card__price"><span class="label">PRICE</span>₹7,999</span>
+          <a href="product-electronics.html" class="btn btn--primary btn--sm" onclick="event.stopPropagation();">View <span class="arrow"></span></a>
+        </div>
+      </article>
+
+      <!-- 02 2DOF Robotic Arm -->
+      <article class="card product-card product-card--compact" style="cursor:pointer;" onclick="location.href='product-2dof.html'">
+        <div class="product-card__head">
+          <span class="product-card__num">P—02</span>
+          <span class="tag">Hardware</span>
+        </div>
+        <div class="product-card__photo product-card__photo--contain" style="position:relative;">
+          <span style="position:absolute;top:12px;left:14px;white-space:nowrap;font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);">2DOF · Robotic Arm</span>
+          <img src="assets/2dof-arm.png" alt="2DOF Robotic Arm" style="width:100%;height:100%;object-fit:contain;padding:14px;" />
+        </div>
+        <h3 style="font-size:17px;">2DOF Robotic Arm</h3>
+        <p class="product-card__desc" style="font-size:13px;">Assemble, wire, and program a real 2-axis robotic arm. Learn kinematics by building the machine that demonstrates them.</p>
+        <div class="product-card__foot">
+          <span class="product-card__price"><span class="label">PRICE</span>₹1,999</span>
+          <a href="product-2dof.html" class="btn btn--primary btn--sm" onclick="event.stopPropagation();">View <span class="arrow"></span></a>
+        </div>
+      </article>
+
+    </div>
+<section class="section" style="padding-top:64px;padding-bottom:64px;background:var(--text-primary);">
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;">
+    <div>
+      <span style="font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,0.5);display:block;margin-bottom:10px;">— Need a workshop instead?</span>
+      <h2 style="font-size:clamp(24px,3vw,36px);color:#fff;margin:0;letter-spacing:-0.02em;">Get a workshop at your institution.</h2>
+    </div>
+    <a href="workshops.html#enquire" class="btn btn--outline" style="border-color:rgba(255,255,255,0.4);color:#fff;flex-shrink:0;" onmouseover="this.style.borderColor='#E87722';this.style.color='#E87722'" onmouseout="this.style.borderColor='rgba(255,255,255,0.4)';this.style.color='#fff'">
+      Book a Workshop <span class="arrow"></span>
+    </a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div>Orca Robotics © 2025</div>
+    <ul class="footer__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="workshops.html">Workshops</a></li>
+      <li><a href="simulators.html">Simulators</a></li>
+      <li><a href="atal-lab.html">Atal Lab</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+    </ul>
+    <div class="footer__right"><a href="mailto:info@orcarobotics.in">info@orcarobotics.in</a></div>
+  </div>
+</footer>
+
+<script src="scripts.js"></script>
+
+<!-- ── What makes us different popup ── -->
+<style>
+#diff-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(17,17,17,0.72);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+#diff-popup.is-visible {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+.diff-card {
+  position: relative;
+  width: min(500px, 100%);
+  background: #111111;
+  border-radius: 20px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.3);
+  padding: 48px 40px 36px;
+  transform: translateY(12px);
+  transition: transform 0.35s ease;
+}
+#diff-popup.is-visible .diff-card {
+  transform: translateY(0);
+}
+#diff-popup__close {
+  position: absolute;
+  top: 14px; right: 16px;
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: rgba(255,255,255,0.45);
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease;
+  line-height: 1;
+}
+#diff-popup__close:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+.diff-card__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.diff-card__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  color: #ffffff;
+  margin: 0 0 24px;
+}
+.diff-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.diff-list li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.diff-list__num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  min-width: 20px;
+  padding-top: 3px;
+}
+.diff-list__text strong {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+.diff-list__text span {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.55;
+}
+</style>
+
+<div id="diff-popup" role="dialog" aria-modal="true" aria-labelledby="diff-popup__title">
+  <div class="diff-card">
+    <button id="diff-popup__close" aria-label="Close">&#x2715;</button>
+    <div class="diff-card__eyebrow">Before you browse</div>
+    <h2 class="diff-card__title" id="diff-popup__title">What makes us different</h2>
+    <ul class="diff-list">
+      <li>
+        <span class="diff-list__num">01</span>
+        <div class="diff-list__text">
+          <strong>Real-world skills</strong>
+          <span>Every kit is designed to teach real engineering skills, not just assembly.</span>
+        </div>
+      </li>
+      <li>
+        <span class="diff-list__num">02</span>
+        <div class="diff-list__text">
+          <strong>Everything you need</strong>
+          <span>Step-by-step guides, simulators, and project briefs ship with every product.</span>
+        </div>
+      </li>
+      <li>
+        <span class="diff-list__num">03</span>
+        <div class="diff-list__text">
+          <strong>Community backed</strong>
+          <span>Get unstuck fast. Our builder community and team are always one message away.</span>
+        </div>
+      </li>
+      <li>
+        <span class="diff-list__num">04</span>
+        <div class="diff-list__text">
+          <strong>Made in India, for the world</strong>
+          <span>Engineered locally, built to last.</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+  var popup = document.getElementById('diff-popup');
+  var closeBtn = document.getElementById('diff-popup__close');
+
+  function show(){ popup.classList.add('is-visible'); document.body.style.overflow='hidden'; }
+  function hide(){ popup.classList.remove('is-visible'); document.body.style.overflow=''; }
+
+  closeBtn.addEventListener('click', hide);
+  popup.addEventListener('click', function(e){ if(e.target===popup) hide(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') hide(); });
+
+  if(!sessionStorage.getItem('shop-diff-shown')){
+    sessionStorage.setItem('shop-diff-shown','1');
+    setTimeout(show, 800);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Basic Electronics Learning System — Orca Robotics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+.pdp { padding: 40px 0 80px; }
+
+.pdp__top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: start;
+  padding-bottom: 56px;
+  border-bottom: 1px solid var(--border);
+}
+.pdp__gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 88px;
+  align-self: start;
+}
+.pdp__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+.pdp__main-img {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pdp__main-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pdp__thumb-row { display: flex; gap: 10px; }
+.pdp__thumb {
+  width: 72px; height: 72px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.18s;
+  flex-shrink: 0;
+}
+.pdp__thumb.is-active { border-color: var(--accent); }
+.gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background: rgba(0,0,0,0.28);
+  border: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 2;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.pdp__main-img:hover .gallery-arrow { opacity: 1; }
+.gallery-arrow:hover { background: rgba(0,0,0,0.55); }
+.gallery-arrow--prev { left: 12px; }
+.gallery-arrow--prev:hover { transform: translateY(-50%) translateX(-2px); }
+.gallery-arrow--next { right: 12px; }
+.gallery-arrow--next:hover { transform: translateY(-50%) translateX(2px); }
+
+.pdp__info { display: flex; flex-direction: column; gap: 0; }
+.pdp__tag-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.pdp__num { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; }
+.pdp__title {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(22px, 2.8vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+.pdp__subtitle {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pdp__features {
+  list-style: none; padding: 0; margin: 0 0 24px;
+  display: flex; flex-direction: column; gap: 9px;
+}
+.pdp__features li {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 11px;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+.pdp__features li::before {
+  content: "→";
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  padding-top: 2px;
+}
+
+.pdp__buy {
+  border: 1px solid var(--border);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pdp__price-row { display: flex; align-items: baseline; gap: 12px; }
+.pdp__price {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--text-primary);
+}
+.pdp__stock-out {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+  padding: 3px 9px;
+}
+.pdp__notify {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+.pdp__buy-actions { display: flex; flex-direction: column; gap: 10px; }
+
+.pdp__btn-cart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 46px;
+  background: #f0c14b;
+  border: 1px solid #a88734;
+  color: #111;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.18s, opacity 0.18s;
+}
+.pdp__btn-cart:hover:not(:disabled) { background: #e8b830; }
+.pdp__btn-cart:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.pdp__btn-buy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 46px;
+  background: #e87722;
+  border: 1px solid #c45f0a;
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.18s, opacity 0.18s;
+}
+.pdp__btn-buy:hover:not(:disabled) { background: #d4681a; }
+.pdp__btn-buy:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Sections ── */
+.pdp__section {
+  padding: 48px 0;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 48px;
+}
+.pdp__section-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text-primary);
+  padding-top: 4px;
+}
+.pdp__body {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+}
+.pdp__body p { margin: 0 0 14px; }
+.pdp__body p:last-child { margin: 0; }
+.pdp__body strong { color: var(--text-primary); }
+
+/* Activities list */
+.activity-list {
+  list-style: none; padding: 0; margin: 16px 0 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px;
+}
+.activity-list li {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+.activity-list li::before {
+  content: "→";
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  padding-top: 2px;
+}
+
+/* Components table */
+.comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 16px;
+}
+.comp-table thead tr { background: var(--text-primary); }
+.comp-table thead td {
+  padding: 10px 14px;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--text-primary);
+}
+.comp-table tbody tr:nth-child(even) td { background: var(--bg); }
+.comp-table tbody td {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--text-primary);
+}
+.comp-table tbody td:last-child {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: center;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* FAQ */
+.faq-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
+.faq-item {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+}
+.faq-item:first-child { border-top: 1px solid var(--border); }
+.faq-q {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+.faq-a {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Specs table */
+.specs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.specs-table tr:nth-child(odd) td { background: var(--bg); }
+.specs-table td {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.specs-table td:first-child {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  width: 38%;
+}
+.specs-table td:last-child { font-weight: 500; color: var(--text-primary); }
+
+/* Related */
+.related-strip {
+  border: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  overflow: hidden;
+}
+.related-strip:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.related-strip__img {
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.related-strip__img img { width: 100%; height: 100%; object-fit: contain; padding: 16px; }
+.related-strip__body { padding: 20px 24px; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+.related-strip__num { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.related-strip__title { font-family: var(--font-display); font-weight: 700; font-size: 16px; }
+.related-strip__desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; }
+
+@media (max-width: 860px) {
+  .pdp__top { grid-template-columns: 1fr; gap: 32px; }
+  .pdp__gallery { position: static; }
+  .pdp__section { grid-template-columns: 1fr; gap: 20px; }
+  .activity-list { grid-template-columns: 1fr; }
+  .related-strip { grid-template-columns: 120px 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav__inner">
+    <a href="index.html" class="brand" aria-label="Orca Robotics home">
+      <img class="brand__mark-img" src="assets/orca-mark.png" alt="" />
+      <span class="brand__word">Orca Robotics</span>
+    </a>
+    <nav>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="workshops.html">Workshops</a></li>
+        <li><a href="simulators.html">Simulators</a></li>
+        <li><a href="atal-lab.html">Atal Lab</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+    <button type="button" class="btn btn--outline btn--sm nav__cta" data-community-open>Join Community</button>
+    <a href="shop.html" class="btn btn--primary btn--sm nav__cta">Shop</a>
+    <button class="nav__hamburger" aria-label="Open menu"><span></span></button>
+  </div>
+</header>
+
+<!-- Breadcrumb -->
+<div style="border-bottom:1px solid var(--border);padding:10px 0;background:var(--surface);">
+  <div class="container" style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:0.08em;color:var(--text-muted);">
+    <a href="shop.html" style="color:var(--text-muted);text-decoration:none;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">Shop</a>
+    <span>›</span>
+    <span style="color:var(--text-primary);">Basic Electronics Learning System</span>
+  </div>
+</div>
+
+<main class="pdp">
+  <div class="container">
+
+    <!-- Top: image + info -->
+    <div class="pdp__top">
+
+      <!-- Gallery -->
+      <div class="pdp__gallery">
+        <div class="pdp__main-img" style="position:relative;">
+          <img id="main-img" src="assets/elec-kit-flatlay.jpg" alt="Basic Electronics Learning System — kit contents" />
+          <button class="gallery-arrow gallery-arrow--prev" onclick="galleryNav(-1)" aria-label="Previous image"><svg width="10" height="18" viewBox="0 0 10 18" fill="none"><path d="M9 1L1 9l8 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="gallery-arrow gallery-arrow--next" onclick="galleryNav(1)" aria-label="Next image"><svg width="10" height="18" viewBox="0 0 10 18" fill="none"><path d="M1 1l8 8-8 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="pdp__thumb-row" style="flex-wrap:wrap;">
+          <div class="pdp__thumb is-active" onclick="switchImg(this,'assets/elec-kit-flatlay.jpg')"><img src="assets/elec-kit-flatlay.jpg" alt="Kit contents" /></div>
+          <div class="pdp__thumb" onclick="switchImg(this,'assets/elec-oscilloscope.jpg')"><img src="assets/elec-oscilloscope.jpg" alt="Oscilloscope activity" /></div>
+          <div class="pdp__thumb" onclick="switchImg(this,'assets/elec-activity.jpg')"><img src="assets/elec-activity.jpg" alt="Student activity" /></div>
+          <div class="pdp__thumb" onclick="switchImg(this,'assets/elec-handbook.jpg')"><img src="assets/elec-handbook.jpg" alt="Handbook pages" /></div>
+          <div class="pdp__thumb" onclick="switchImg(this,'assets/electronics-cover.jpg')"><img src="assets/electronics-cover.jpg" alt="Handbook cover" /></div>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="pdp__info">
+        <div class="pdp__tag-row">
+          <span class="pdp__num">P—01</span>
+          <span class="tag">Book + Kit</span>
+        </div>
+        <h1 class="pdp__title">Basic Electronics Learning System</h1>
+        <p class="pdp__subtitle">The only electronics experience that takes you from understanding atoms to a working power supply — with a real oscilloscope, 43 hands-on activities, and the theory that actually explains why it all works.</p>
+
+        <ul class="pdp__features">
+          <li>590+ page illustrated handbook — activity-first, self-learner friendly</li>
+          <li>Real digital storage oscilloscope (DSO 152) — not a simulation</li>
+          <li>43 activities across 14 topic areas — beginner to intermediate level</li>
+          <li>All 25+ components included — nothing extra to buy</li>
+          <li>Covers: DC/AC circuits, semiconductors, diodes, filters, rectifiers, logic gates</li>
+          <li>Certificate of Completion on finishing all activities</li>
+          <li>For Class 11–12 students, UG engineers, makers, and lab coordinators</li>
+          <li>Made in India</li>
+        </ul>
+
+        <div class="pdp__buy">
+          <div class="pdp__price-row">
+            <div class="pdp__price">₹7,999</div>
+          </div>
+          <div class="pdp__avail">ships within 5–7 business days</div>
+          <div class="pdp__buy-actions">
+            <!-- Shopify Buy Button -->
+            <div id='product-component-1781338761901'></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">About this item</div>
+      <div class="pdp__body">
+        <p>Most electronics kits give you a breadboard and a "blink an LED" tutorial. This is not that.</p>
+        <p>The Basic Electronics Learning System is a structured, activity-first learning system built for anyone who wants to genuinely understand electronics — not just follow instructions until something lights up. Every concept is introduced through analogy, derived from first principles, and immediately applied in a hands-on circuit you build yourself.</p>
+        <p>The system pairs a <strong>590+ page illustrated handbook</strong> with a <strong>complete component set</strong> and a real <strong>digital storage oscilloscope</strong>. By the time you finish, you won't just know how resistors, capacitors, inductors, and diodes behave — you'll have measured them, seen their waveforms, and built working circuits around them.</p>
+        <p>This is the foundation that every electronics engineer, robotics builder, and maker needs — and almost nobody actually gets from standard coursework. Finish all the activities and you'll earn an ORCA Robotics Certificate of Completion to show for it.</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px;">
+          <img src="assets/elec-activity.jpg" alt="Student working through an activity" style="width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);" />
+          <img src="assets/elec-oscilloscope.jpg" alt="Oscilloscope measuring capacitor charging" style="width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);" />
+          <img src="assets/elec-handbook.jpg" alt="Handbook showing parallel connection" style="width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Who it's for -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">Who this is for</div>
+      <ul class="pdp__features" style="margin:0;">
+        <li>Class 11–12 students in Physics or Electronics streams who want to go deeper than the textbook</li>
+        <li>Engineering students (ECE, EEE, Instrumentation) in 1st or 2nd year building their fundamentals</li>
+        <li><span>Hobbyists and makers who have been following tutorials but don't understand <em>why</em> things work</span></li>
+        <li>Science teachers and lab coordinators looking for a structured, self-contained lab experience</li>
+        <li>Anyone preparing for GATE, JEE, or university practicals in electronics</li>
+      </ul>
+    </div>
+
+    <!-- 43 Activities -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">43 Activities</div>
+      <div>
+        <p class="pdp__body" style="margin-bottom:0;">Across 14 topic areas — from resistor circuits and RC filters to rectifiers, clippers, clampers, Zener regulators, and logic gates. Every activity includes calculations, oscilloscope measurements, and expected results.</p>
+        <ul class="activity-list">
+          <li>Light sensing circuit with automatic ON/OFF</li>
+          <li>LED brightness control using a knob</li>
+          <li>Capacitor powering an LED without a battery</li>
+          <li>Live charging &amp; discharging curves on the oscilloscope</li>
+          <li>Inductor spark effect using a reverse-biased LED</li>
+          <li>Measuring a transformer's output with an oscilloscope</li>
+          <li>Low pass and high pass filters — built and compared</li>
+          <li>AC waveform shaping using clipper circuits</li>
+          <li>Waveform shifting using a clamper circuit</li>
+          <li>AC to DC conversion using a bridge rectifier</li>
+          <li>Smooth DC output using a capacitor filter</li>
+          <li>Stable voltage output using a Zener regulator</li>
+          <li>Spike protection circuit for sensitive components</li>
+          <li>Logic gates built using only diodes and resistors</li>
+          <li>Complete DC power supply built from scratch</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- What's in the box -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">What's in the box</div>
+      <div>
+        <p class="pdp__body" style="margin-bottom:16px;">Everything required for all 43 activities. No additional purchases needed.</p>
+        <table class="comp-table">
+          <thead>
+            <tr><td>Component</td><td>Qty</td></tr>
+          </thead>
+          <tbody>
+            <tr><td>590+ page illustrated handbook (physical)</td><td>1</td></tr>
+            <tr><td>Digital Storage Oscilloscope DSO 152</td><td>1</td></tr>
+            <tr><td>Multimeter</td><td>1</td></tr>
+            <tr><td>Breadboard</td><td>1</td></tr>
+            <tr><td>Resistor Box</td><td>1</td></tr>
+            <tr><td>Capacitor 100µF</td><td>2</td></tr>
+            <tr><td>Capacitor 0.1µF</td><td>4</td></tr>
+            <tr><td>Capacitor 1000µF</td><td>2</td></tr>
+            <tr><td>Capacitor 220µF</td><td>2</td></tr>
+            <tr><td>Inductor 100mH</td><td>2</td></tr>
+            <tr><td>LDR</td><td>1</td></tr>
+            <tr><td>Diode 1N4007</td><td>10</td></tr>
+            <tr><td>Zener Diode 5.1V 0.5W</td><td>4</td></tr>
+            <tr><td>LEDs</td><td>9</td></tr>
+            <tr><td>Potentiometer 10K</td><td>1</td></tr>
+            <tr><td>Push Button</td><td>8</td></tr>
+            <tr><td>SPDT Switch</td><td>4</td></tr>
+            <tr><td>Transformer 6-0-6</td><td>1</td></tr>
+            <tr><td>Battery 9V</td><td>2</td></tr>
+            <tr><td>Battery 1.5V</td><td>1</td></tr>
+            <tr><td>9V Battery Connector</td><td>2</td></tr>
+            <tr><td>1.5V Battery Holder</td><td>1</td></tr>
+            <tr><td>Alligator Clips</td><td>3</td></tr>
+            <tr><td>Compass</td><td>1</td></tr>
+            <tr><td>Wire Stripper</td><td>1</td></tr>
+            <tr><td>Single Strand Wire</td><td>1 roll</td></tr>
+            <tr><td>Jumper Wires</td><td>5</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">FAQ</div>
+      <ul class="faq-list">
+        <li class="faq-item">
+          <div class="faq-q">Do I need prior knowledge?</div>
+          <p class="faq-a">No. The handbook starts from atomic structure and builds up from there. No background in electronics is assumed.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">Is the oscilloscope a real instrument?</div>
+          <p class="faq-a">Yes. The DSO 152 is the same type used in electronics labs — not a simulation or toy.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">Are all components included?</div>
+          <p class="faq-a">Yes. You will need a mains socket for transformer activities only. Everything else is in the box.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">Is this safe for students?</div>
+          <p class="faq-a">Most activities run on a 9V battery. Transformer activities are clearly marked and require adult supervision. You never work with mains voltage directly.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">How do I get the certificate?</div>
+          <p class="faq-a">Complete all activities, submit videos via the Google Form included in the handbook, and receive your ORCA Robotics Certificate of Completion.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">How do I contact you?</div>
+          <p class="faq-a">Instagram: <a href="https://instagram.com/orca.robotics" style="color:var(--accent);">@orca.robotics</a> &nbsp;|&nbsp; Email: <a href="mailto:info@orcarobotics.in" style="color:var(--accent);">info@orcarobotics.in</a></p>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Related -->
+    <div class="pdp__section" style="border-bottom:none;padding-bottom:0;">
+      <div class="pdp__section-label">Also in the shop</div>
+      <a class="related-strip" href="product-2dof.html">
+        <div class="related-strip__img">
+          <img src="assets/2dof-arm.png" alt="2DOF Robotic Arm" />
+        </div>
+        <div class="related-strip__body">
+          <div class="related-strip__num">P—02</div>
+          <div class="related-strip__title">2DOF Robotic Arm</div>
+          <p class="related-strip__desc">Assemble, wire, and program a real 2-axis robotic arm. Hands-on kinematics for 1st year students.</p>
+          <span class="btn btn--outline btn--sm" style="margin-top:8px;display:inline-flex;">View Product <span class="arrow"></span></span>
+        </div>
+      </a>
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div>Orca Robotics © 2025</div>
+    <ul class="footer__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="workshops.html">Workshops</a></li>
+      <li><a href="simulators.html">Simulators</a></li>
+      <li><a href="atal-lab.html">Atal Lab</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+    </ul>
+    <div class="footer__right"><a href="mailto:info@orcarobotics.in">info@orcarobotics.in</a></div>
+  </div>
+</footer>
+
+<script src="scripts.js"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+(function () {
+  var scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
+  if (window.ShopifyBuy) {
+    if (window.ShopifyBuy.UI) {
+      ShopifyBuyInit();
+    } else {
+      loadScript();
+    }
+  } else {
+    loadScript();
+  }
+  function loadScript() {
+    var script = document.createElement('script');
+    script.async = true;
+    script.src = scriptURL;
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(script);
+    script.onload = ShopifyBuyInit;
+  }
+  function ShopifyBuyInit() {
+    var client = ShopifyBuy.buildClient({
+      domain: 's1nbge-re.myshopify.com',
+      storefrontAccessToken: 'be50d2289ab65427b570af0332d10844',
+    });
+    ShopifyBuy.UI.onReady(client).then(function (ui) {
+      ui.createComponent('product', {
+        id: '9186008760577',
+        node: document.getElementById('product-component-1781338761901'),
+        moneyFormat: 'Rs.%20%7B%7Bamount%7D%7D',
+        options: {
+  "product": {
+    "styles": {
+      "product": {
+        "text-align": "left",
+        "@media (min-width: 601px)": {
+          "max-width": "calc(25% - 20px)",
+          "margin-left": "0px",
+          "margin-bottom": "50px"
+        }
+      },
+      "button": {
+        "font-family": "Oxygen, sans-serif",
+        "font-weight": "bold",
+        ":hover": {
+          "background-color": "#d16b1f"
+        },
+        "background-color": "#e87722",
+        ":focus": {
+          "background-color": "#d16b1f"
+        },
+        "border-radius": "16px"
+      }
+    },
+    "contents": {
+      "img": false,
+      "title": false,
+      "price": false
+    },
+    "text": {
+      "button": "Add to cart"
+    },
+    "googleFonts": [
+      "Oxygen"
+    ]
+  },
+  "productSet": {
+    "styles": {
+      "products": {
+        "@media (min-width: 601px)": {
+          "margin-left": "-20px"
+        }
+      }
+    }
+  },
+  "modalProduct": {
+    "contents": {
+      "img": false,
+      "imgWithCarousel": true,
+      "button": false,
+      "buttonWithQuantity": true
+    },
+    "styles": {
+      "product": {
+        "@media (min-width: 601px)": {
+          "max-width": "100%",
+          "margin-left": "0px",
+          "margin-bottom": "0px"
+        }
+      },
+      "button": {
+        "font-family": "Oxygen, sans-serif",
+        "font-weight": "bold",
+        ":hover": {
+          "background-color": "#d16b1f"
+        },
+        "background-color": "#e87722",
+        ":focus": {
+          "background-color": "#d16b1f"
+        },
+        "border-radius": "16px"
+      }
+    },
+    "googleFonts": [
+      "Oxygen"
+    ],
+    "text": {
+      "button": "Add to cart"
+    }
+  },
+  "option": {},
+  "cart": {
+    "styles": {
+      "button": {
+        "font-family": "Oxygen, sans-serif",
+        "font-weight": "bold",
+        ":hover": {
+          "background-color": "#d16b1f"
+        },
+        "background-color": "#e87722",
+        ":focus": {
+          "background-color": "#d16b1f"
+        },
+        "border-radius": "16px"
+      }
+    },
+    "text": {
+      "total": "Subtotal",
+      "button": "Checkout"
+    },
+    "googleFonts": [
+      "Oxygen"
+    ]
+  },
+  "toggle": {
+    "styles": {
+      "toggle": {
+        "font-family": "Oxygen, sans-serif",
+        "font-weight": "bold",
+        "background-color": "#e87722",
+        ":hover": {
+          "background-color": "#d16b1f"
+        },
+        ":focus": {
+          "background-color": "#d16b1f"
+        }
+      }
+    },
+    "googleFonts": [
+      "Oxygen"
+    ]
+  }
+},
+      });
+    });
+  }
+})();
+/*]]>*/
+</script>
+<script>
+var GALLERY_IMGS = [
+  'assets/elec-kit-flatlay.jpg',
+  'assets/elec-oscilloscope.jpg',
+  'assets/elec-activity.jpg',
+  'assets/elec-handbook.jpg',
+  'assets/electronics-cover.jpg'
+];
+function switchImg(thumb, src) {
+  document.getElementById('main-img').src = src;
+  document.querySelectorAll('.pdp__thumb').forEach(function(t){ t.classList.remove('is-active'); });
+  thumb.classList.add('is-active');
+}
+function galleryNav(dir) {
+  var thumbs = Array.from(document.querySelectorAll('.pdp__thumb'));
+  var activeIdx = thumbs.findIndex(function(t){ return t.classList.contains('is-active'); });
+  var nextIdx = (activeIdx + dir + thumbs.length) % thumbs.length;
+  thumbs[nextIdx].click();
+}
+</script>
+</body>
+</html>
