@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Linear Delta Simulator — Orca Robotics</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111111'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23E87722' stroke-width='3.5'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  /* ====================================================================
+     ORCA LIGHT THEME — orange accent, near-white surfaces.
+     Matches the 2R Robot Simulator visual language.
+     ==================================================================== */
+  :root {
+    --bg:#F7F7F5; --bg-panel:#FFFFFF; --bg-soft:#F0F0EE; --bg-elev:#F7F7F5;
+    --border:#DDDDDD; --border2:#E8E8E8; --border-bright:#CCCCCC; --border-strong:#AAAAAA;
+    --text:#111111; --text-dim:#555555; --text-faint:#888888;
+    --accent:#E87722; --accent-deep:#D06820; --accent-soft:rgba(232,119,34,0.10);
+    --blue:#2A6FDB; --orange:#D06820; --pink:#C7468A; --purple:#7C4DD0; --red:#CC3333;
+    --green:#1F8A5B;
+    --arm-up:#3E5370; --arm-low:#5A7799; --steel:#2A3A52;
+    --fs-base:15px; --fs-small:13px; --fs-xs:11.5px; --fs-mono:14px; --fs-mono-sm:12.5px;
+    --fs-title:15px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body {
+    background:var(--bg); color:var(--text);
+    font-family:'DM Sans', system-ui, sans-serif;
+    height:100vh; overflow:hidden; font-size:var(--fs-base);
+    -webkit-font-smoothing:antialiased;
+  }
+  body { padding-top:52px; }
+
+  /* ── TOP NAV ── */
+  #orca-topnav {
+    position:fixed; top:0; left:0; right:0; height:52px;
+    background:#FFFFFF; border-bottom:1px solid var(--border); z-index:9999;
+    display:flex; align-items:center; padding:0 20px; gap:14px; box-sizing:border-box;
+  }
+  #orca-topnav a.home { display:flex; align-items:center; gap:10px; text-decoration:none; flex-shrink:0; }
+  #orca-topnav img { height:28px; width:auto; }
+  #orca-topnav .name { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; color:var(--text); letter-spacing:.01em; }
+  #orca-topnav .crumb { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-faint); letter-spacing:.14em; text-transform:uppercase; }
+  #orca-topnav .back {
+    margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:11px;
+    color:var(--text-dim); letter-spacing:.1em; text-transform:uppercase; text-decoration:none;
+    border:1px solid var(--border); padding:6px 14px; border-radius:3px; flex-shrink:0; transition:all .15s;
+  }
+  #orca-topnav .back:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* ── LAYOUT ── */
+  .app {
+    display:grid; grid-template-columns:380px 1fr;
+    height:calc(100vh - 52px); position:relative; z-index:1;
+  }
+  .panel { background:var(--bg-panel); border-right:1px solid var(--border); overflow-y:auto; display:flex; flex-direction:column; }
+
+  .brand { padding:10px 18px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .brand .sub { font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--text-faint); }
+
+  .section { padding:18px 22px; border-bottom:1px solid var(--border); }
+  .section-label {
+    font-family:'IBM Plex Mono',monospace; font-size:var(--fs-xs); letter-spacing:.18em;
+    text-transform:uppercase; color:var(--text-dim); margin-bottom:14px; font-weight:600;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .badge {
+    font-family:'IBM Plex Mono',monospace; font-size:10px; padding:3px 9px;
+    border:1px solid rgba(232,119,34,0.3); border-radius:3px; color:var(--accent);
+    letter-spacing:.12em; font-weight:600; background:var(--accent-soft);
+  }
+
+  /* ── CONFIG FIELDS ── */
+  .cfg-field { margin-bottom:13px; }
+  .cfg-field label {
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'IBM Plex Mono',monospace; font-size:var(--fs-xs); color:var(--text-dim);
+    margin-bottom:6px; font-weight:600; letter-spacing:.04em;
+  }
+  .cfg-field label .sym { color:var(--accent); font-weight:700; }
+  .cfg-row { display:grid; grid-template-columns:1fr 66px; gap:12px; align-items:center; }
+  .cfg-input {
+    width:100%; background:var(--bg-soft); border:1px solid var(--border-bright); color:var(--text);
+    padding:9px 10px; font-family:'IBM Plex Mono',monospace; font-size:var(--fs-mono-sm);
+    text-align:center; border-radius:3px; font-weight:600; transition:border .15s;
+  }
+  .cfg-input:focus { outline:none; border-color:var(--accent); }
+  .slider { -webkit-appearance:none; appearance:none; width:100%; height:4px; background:var(--border); outline:none; border-radius:2px; }
+  .slider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:50%; background:var(--accent); cursor:pointer; box-shadow:0 0 0 4px rgba(232,119,34,0.18); border:2px solid var(--bg-panel); }
+  .slider::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:var(--accent); cursor:pointer; border:2px solid var(--bg-panel); box-shadow:0 0 0 4px rgba(232,119,34,0.18); }
+
+  /* ── JOINT CONTROLS ── */
+  .joint-ctrl { display:grid; grid-template-columns:50px 1fr 78px; gap:11px; align-items:center; margin-bottom:12px; }
+  .joint-ctrl label { font-family:'IBM Plex Mono',monospace; font-size:var(--fs-mono-sm); color:var(--text-dim); font-weight:600; }
+  .joint-ctrl label b { color:var(--accent); font-weight:700; }
+  .joint-num { position:relative; }
+  .joint-num input { width:100%; background:var(--bg-soft); border:1px solid var(--border-bright); color:var(--accent); padding:8px 30px 8px 8px; font-family:'IBM Plex Mono',monospace; font-size:var(--fs-mono-sm); text-align:right; border-radius:3px; font-weight:700; transition:border .15s; }
+  .joint-num input:focus { outline:none; border-color:var(--accent); }
+  .joint-num::after { content:'mm'; position:absolute; right:7px; top:50%; transform:translateY(-50%); color:var(--text-faint); font-family:'IBM Plex Mono',monospace; font-size:var(--fs-mono-sm); pointer-events:none; }
+  .arm-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+  /* IK mini status */
+  .ik-mini { margin-top:12px; padding:9px 12px; font-family:'IBM Plex Mono',monospace; font-size:var(--fs-mono-sm); font-weight:600; border-radius:3px; border-left:3px solid var(--border-bright); background:var(--bg-soft); color:var(--text-dim); line-height:1.5; }
+  .ik-mini.ok { border-left-color:var(--accent); color:var(--accent); background:rgba(232,119,34,0.06); }
+  .ik-mini.err { border-left-color:var(--red); color:var(--red); background:rgba(204,51,51,0.05); }
+  /* Trajectory player */
+  .traj-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:11px; }
+  .traj-btn { padding:11px 4px; }
+  .traj-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .traj-transport { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .traj-speed { display:grid; grid-template-columns:54px 1fr 52px; gap:11px; align-items:center; margin-top:13px; }
+  .traj-speed > label { font-family:'IBM Plex Mono',monospace; font-size:var(--fs-mono-sm); color:var(--text-dim); font-weight:600; }
+  .traj-speed > .v { font-family:'IBM Plex Mono',monospace; font-size:var(--fs-mono-sm); color:var(--accent); text-align:right; font-weight:700; }
+
+  /* ── IK INPUTS ── */
+  .ik-input-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px; }
+  .ik-input-row label { display:block; font-family:'IBM Plex Mono',monospace; font-size:var(--fs-xs); color:var(--text-dim); letter-spacing:.1em; text-transform:uppercase; margin-bottom:6px; font-weight:600; }
+  .ik-input-row input { width:100%; background:var(--bg-soft); border:1px solid var(--border-bright); color:var(--text); padding:11px 8px; font-family:'IBM Plex Mono',monospace; font-size:var(--fs-mono); border-radius:3px; font-weight:600; text-align:center; }
+  .ik-input-row input:focus { outline:none; border-color:var(--accent); }
+  .btn-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .btn {
+    padding:12px; background:transparent; border:1px solid var(--border-bright); color:var(--text-dim);
+    font-family:'IBM Plex Mono',monospace; font-size:var(--fs-xs); letter-spacing:.14em;
+    text-transform:uppercase; cursor:pointer; border-radius:3px; transition:all .15s; font-weight:700;
+  }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+  .btn.primary { background:var(--text); color:#FFFFFF; border-color:var(--text); font-weight:800; }
+  .btn.primary:hover { background:var(--accent); border-color:var(--accent); }
+
+  .hint {
+    font-size:var(--fs-mono-sm); color:var(--text-dim); font-family:'IBM Plex Mono',monospace;
+    line-height:1.6; padding:12px 14px; background:var(--bg-soft);
+    border-left:2px solid var(--border-bright); margin-top:14px; font-weight:500;
+  }
+
+  /* ── VIEWPORT ── */
+  .viewport { position:relative; background:radial-gradient(ellipse at center, #FFFFFF 0%, #ECECEA 100%); overflow:hidden; }
+  #canvas { display:block; width:100%; height:100%; cursor:grab; }
+  #canvas:active { cursor:grabbing; }
+  .vp-overlay-tl, .vp-overlay-tr, .vp-overlay-bl, .vp-overlay-br {
+    position:absolute; z-index:10; font-family:'IBM Plex Mono',monospace; font-size:var(--fs-xs);
+    color:var(--text-dim); letter-spacing:.1em; pointer-events:none; text-shadow:0 1px 2px rgba(255,255,255,0.7);
+  }
+  .vp-overlay-tl { top:20px; left:24px; } .vp-overlay-tr { top:20px; right:24px; text-align:right; }
+  .vp-overlay-bl { bottom:20px; left:24px; } .vp-overlay-br { bottom:20px; right:24px; text-align:right; }
+  .vp-overlay-br button { pointer-events:auto; }
+  .vp-title { font-size:var(--fs-small); color:rgba(17,17,17,0.6); letter-spacing:.2em; text-transform:uppercase; margin-bottom:5px; font-weight:700; }
+  .vp-title::before { content:'▸ '; color:var(--accent); }
+  .vp-coord { color:var(--accent); font-size:var(--fs-small); font-weight:600; }
+  .vp-coord b { color:rgba(85,85,85,0.85); margin-right:6px; font-weight:500; }
+  .legend { display:flex; gap:18px; align-items:center; }
+  .legend-item { display:flex; align-items:center; gap:7px; font-weight:600; }
+  .legend-dot { width:14px; height:3px; }
+  .legend-dot.x { background:#CC3D4F; } .legend-dot.y { background:#2E9E5B; } .legend-dot.z { background:#2A6FDB; }
+  .vp-ctrl-hint { font-size:11px; color:rgba(85,85,85,0.55); margin-top:5px; letter-spacing:.1em; font-weight:500; }
+
+  /* ── TABS ── */
+  .tabs { display:flex; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg-panel); z-index:5; }
+  .tab {
+    flex:1; padding:14px 6px; background:transparent; border:none; color:var(--text-faint);
+    font-family:'IBM Plex Mono',monospace; font-size:var(--fs-xs); letter-spacing:.14em;
+    text-transform:uppercase; cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; font-weight:700;
+  }
+  .tab:hover { color:var(--text-dim); }
+  .tab.active { color:var(--accent); border-bottom-color:var(--accent); background:var(--bg-soft); }
+  .tab-content { display:none; padding:20px 24px; }
+  .tab-content.active { display:block; }
+
+  /* ── CALC STEPS ── */
+  .calc-step { margin-bottom:22px; padding-bottom:20px; border-bottom:1px dashed var(--border-bright); }
+  .calc-step:last-child { border-bottom:none; }
+  .step-header { display:flex; align-items:baseline; gap:12px; margin-bottom:12px; }
+  .step-num { font-family:'IBM Plex Mono',monospace; font-size:11px; color:#fff; background:var(--accent); padding:4px 9px; border-radius:3px; font-weight:800; letter-spacing:.08em; }
+  .step-title { font-family:'DM Sans',sans-serif; font-size:var(--fs-title); font-weight:600; color:var(--text); }
+  .step-desc { font-size:var(--fs-base); color:var(--text-dim); margin-bottom:12px; line-height:1.65; }
+  .step-desc code, .deriv-list code { font-family:'IBM Plex Mono',monospace; background:var(--bg-soft); padding:2px 7px; border-radius:3px; color:var(--accent); font-size:var(--fs-mono-sm); font-weight:600; border:1px solid var(--border-bright); }
+  .step-desc b { color:var(--text); font-weight:600; }
+
+  .matrix { font-family:'IBM Plex Mono',monospace; font-size:var(--fs-mono-sm); background:var(--bg-soft); border:1px solid var(--border-bright); border-radius:3px; padding:14px 16px; color:var(--text); overflow-x:auto; position:relative; line-height:1.75; font-weight:500; }
+  .matrix::before { content:''; position:absolute; left:4px; top:10px; bottom:10px; width:2px; background:var(--accent); }
+  .matrix b { color:var(--accent); font-weight:700; }
+  .matrix .arm1 { color:#2A6FDB; font-weight:700; } .matrix .arm2 { color:#1F8A5B; font-weight:700; } .matrix .arm3 { color:#C7468A; font-weight:700; }
+  .matrix-label { font-family:'IBM Plex Mono',monospace; font-size:var(--fs-xs); color:var(--accent); letter-spacing:.12em; font-weight:700; margin-bottom:7px; margin-top:12px; }
+  .matrix pre { font-family:inherit; white-space:pre; }
+  .src-note { font-family:'IBM Plex Mono',monospace; font-size:var(--fs-xs); color:var(--text-faint); line-height:1.5; padding:9px 12px; margin-bottom:14px; background:var(--bg-soft); border:1px solid var(--border2); border-radius:3px; }
+  .src-note b { color:var(--accent); font-weight:600; }
+
+  .result-box { background:rgba(232,119,34,0.06); border:1px solid var(--accent); padding:16px 18px; border-radius:3px; margin-top:14px; }
+  .result-box .label { font-family:'IBM Plex Mono',monospace; font-size:var(--fs-xs); color:var(--accent); letter-spacing:.14em; text-transform:uppercase; margin-bottom:10px; font-weight:700; }
+  .result-box .val { font-family:'IBM Plex Mono',monospace; font-size:var(--fs-mono); color:var(--text); line-height:1.7; font-weight:600; }
+  .result-box .val b { color:var(--accent); margin-right:8px; font-weight:500; }
+
+  .ik-status { padding:13px 16px; background:var(--bg-soft); border-left:3px solid var(--orange); font-family:'IBM Plex Mono',monospace; font-size:var(--fs-mono-sm); color:var(--text-dim); margin-bottom:18px; font-weight:600; border-radius:0 3px 3px 0; }
+  .ik-status.ok { border-left-color:var(--accent); color:var(--accent); background:rgba(232,119,34,0.06); }
+  .ik-status.err { border-left-color:var(--red); color:var(--red); background:rgba(204,51,51,0.05); }
+
+  .arm-table { width:100%; border-collapse:collapse; font-family:'IBM Plex Mono',monospace; font-size:var(--fs-mono-sm); margin-top:6px; }
+  .arm-table th { text-align:right; padding:8px 8px; color:var(--text-faint); font-size:10px; text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid var(--border-bright); font-weight:600; }
+  .arm-table th:first-child { text-align:left; }
+  .arm-table td { padding:8px 8px; text-align:right; border-bottom:1px solid var(--border2); color:var(--text); font-weight:600; }
+  .arm-table td:first-child { text-align:left; font-weight:700; }
+  .arm-table tr:last-child td { border-bottom:none; }
+  .ar1 { color:#2A6FDB; } .ar2 { color:#1F8A5B; } .ar3 { color:#C7468A; }
+
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--border-strong); }
+
+  @media (max-width:860px) {
+    html, body { height:auto; min-height:100%; overflow-x:hidden; overflow-y:auto; }
+    .app { grid-template-columns:1fr; height:auto; }
+    .panel { overflow:visible; border-right:none; border-bottom:1px solid var(--border); }
+    .viewport { height:64vh; min-height:360px; }
+  }
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F7F7F5"/></svg>
+</template>
+<nav id="orca-topnav">
+  <a class="home" href="index.html">
+    <img src="assets/orca-mark.png" alt="" />
+    <span class="name">Orca Robotics</span>
+  </a>
+  <span class="crumb">— Linear Delta Simulator</span>
+  <a class="back" href="simulators.html">&#8592; Simulators</a>
+</nav>
+
+<div class="app" id="app">
+
+  <!-- ── LEFT: CONFIG ── -->
+  <aside class="panel">
+    <div class="brand">
+      <span class="sub">3-PUU Linear Delta · FK &amp; IK</span>
+    </div>
+
+    <div class="section">
+      <div class="section-label"><span>Robot Geometry</span><span class="badge">mm</span></div>
+      <div class="cfg-field">
+        <label><span>Delta radius <span class="sym">R</span></span><span>tower circle</span></label>
+        <div class="cfg-row">
+          <input type="range" class="slider" id="R-slider" min="80" max="260" step="5" value="140" />
+          <input class="cfg-input" id="R" type="number" step="5" value="140" />
+        </div>
+      </div>
+      <div class="cfg-field">
+        <label><span>Effector offset <span class="sym">r</span></span><span>platform joint</span></label>
+        <div class="cfg-row">
+          <input type="range" class="slider" id="r-slider" min="10" max="100" step="5" value="30" />
+          <input class="cfg-input" id="r" type="number" step="5" value="30" />
+        </div>
+      </div>
+      <div class="cfg-field">
+        <label><span>Diagonal rod <span class="sym">L</span></span><span>parallel arm</span></label>
+        <div class="cfg-row">
+          <input type="range" class="slider" id="L-slider" min="180" max="420" step="5" value="300" />
+          <input class="cfg-input" id="L" type="number" step="5" value="300" />
+        </div>
+      </div>
+      <div class="cfg-field">
+        <label><span>Tower height <span class="sym">H</span></span><span>carriage travel</span></label>
+        <div class="cfg-row">
+          <input type="range" class="slider" id="H-slider" min="260" max="560" step="5" value="440" />
+          <input class="cfg-input" id="H" type="number" step="5" value="440" />
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Carriage Heights · Forward Kinematics</div>
+      <div class="joint-ctrl">
+        <label><span class="arm-dot" style="background:#2A6FDB"></span><b>z₁</b></label>
+        <input type="range" class="slider" id="j1-slider" min="0" max="440" step="1" value="360" />
+        <span class="joint-num"><input id="j1-num" type="number" min="0" max="440" step="1" value="360" /></span>
+      </div>
+      <div class="joint-ctrl">
+        <label><span class="arm-dot" style="background:#1F8A5B"></span><b>z₂</b></label>
+        <input type="range" class="slider" id="j2-slider" min="0" max="440" step="1" value="360" />
+        <span class="joint-num"><input id="j2-num" type="number" min="0" max="440" step="1" value="360" /></span>
+      </div>
+      <div class="joint-ctrl">
+        <label><span class="arm-dot" style="background:#C7468A"></span><b>z₃</b></label>
+        <input type="range" class="slider" id="j3-slider" min="0" max="440" step="1" value="360" />
+        <span class="joint-num"><input id="j3-num" type="number" min="0" max="440" step="1" value="360" /></span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Inverse Kinematics — Target (mm)</div>
+      <div class="ik-input-row">
+        <div><label>X</label><input type="number" id="target-x" step="5" value="40" /></div>
+        <div><label>Y</label><input type="number" id="target-y" step="5" value="30" /></div>
+        <div><label>Z</label><input type="number" id="target-z" step="5" value="90" /></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btn-reset">Reset</button>
+        <button class="btn primary" id="btn-solve">Solve IK</button>
+      </div>
+      <div class="ik-mini" id="ik-status-mini">enter a target (X, Y, Z in mm) and click “solve ik” — the carriages move to the pose.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-label"><span>Trajectories</span><span class="badge">PATH</span></div>
+      <div class="traj-grid">
+        <button class="btn traj-btn" data-traj="circle">Circle</button>
+        <button class="btn traj-btn" data-traj="figure8">Figure-8</button>
+        <button class="btn traj-btn" data-traj="spiral">Spiral</button>
+        <button class="btn traj-btn" data-traj="helix">Helix</button>
+        <button class="btn traj-btn" data-traj="square">Square</button>
+        <button class="btn traj-btn" data-traj="rose">Rose</button>
+      </div>
+      <div class="traj-transport">
+        <button class="btn primary" id="traj-play">▶ Play</button>
+        <button class="btn" id="traj-stop">Stop</button>
+      </div>
+      <div class="traj-speed">
+        <label>speed</label>
+        <input type="range" class="slider" id="traj-speed" min="0.25" max="3" step="0.05" value="1" />
+        <span class="v" id="traj-speed-val">1×</span>
+      </div>
+      <div class="ik-mini" id="traj-prog">select a path — the platform traces it automatically.</div>
+    </div>
+  </aside>
+
+  <!-- ── CENTER: 3D VIEWPORT ── -->
+  <main class="viewport">
+    <canvas id="canvas"></canvas>
+    <div class="vp-overlay-tl">
+      <div class="vp-title">viewport · 3d</div>
+      <div>perspective</div>
+      <div class="vp-ctrl-hint">LMB orbit · RMB pan · wheel zoom</div>
+    </div>
+    <div class="vp-overlay-tr">
+      <div class="vp-title">end-effector · mm</div>
+      <div class="vp-coord"><b>X</b><span id="ee-x">0.0</span></div>
+      <div class="vp-coord"><b>Y</b><span id="ee-y">0.0</span></div>
+      <div class="vp-coord"><b>Z</b><span id="ee-z">0.0</span></div>
+      <div class="vp-title" style="margin-top:14px;">carriage · mm</div>
+      <div class="vp-coord"><b style="color:#2A6FDB">z₁</b><span id="cz-1">0.0</span></div>
+      <div class="vp-coord"><b style="color:#1F8A5B">z₂</b><span id="cz-2">0.0</span></div>
+      <div class="vp-coord"><b style="color:#C7468A">z₃</b><span id="cz-3">0.0</span></div>
+    </div>
+    <div class="vp-overlay-bl">
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot x"></div><span>X</span></div>
+        <div class="legend-item"><div class="legend-dot y"></div><span>Y</span></div>
+        <div class="legend-item"><div class="legend-dot z"></div><span>Z (up)</span></div>
+      </div>
+    </div>
+    <div class="vp-overlay-br">
+      <div id="workspace-info">reach · radial 0 mm · z 0 mm</div>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+        <button id="wv-toggle-btn" onclick="toggleWorkspaceViz()" style="background:rgba(232,119,34,0.12);border:1px solid var(--accent);color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border-radius:3px;cursor:pointer;">&#9711; Show Workspace</button>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<script src="sim-delta-linear.js"></script>
+</body>
+</html>

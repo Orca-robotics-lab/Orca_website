@@ -1,0 +1,2453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>2R Robot Simulator — Orca Robotics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  /* ====================================================================
+     PROJECTOR-FRIENDLY PALETTE
+     ---------------------------------------------------------------------
+     Design goals for a workshop on a projector:
+     - Near-white foreground on deep near-black background (max contrast)
+     - Saturated, high-chroma accent colors (not muted pastels — projectors
+       desaturate & wash them out)
+     - Heavier font weights, larger sizes
+     - Thicker borders / strokes
+     ==================================================================== */
+  :root {
+    --bg: #000000;
+    --bg-panel:     #0c121b;
+    --bg-soft:      #141d2b;
+    --bg-elev:      #1a2538;
+
+    --border: #1e1e1e;
+    --border-bright:#3e5370;
+    --border-strong:#556c8a;
+
+    --text: #ffffff;        /* near-white */
+    --text-dim:     #c4ccd8;
+    --text-faint:   #8a96a8;
+
+    --accent: #00e5cc;        /* saturated cyan-green */
+    --accent-deep: #00c8b8;
+    --accent-soft:  rgba(0, 255, 170, 0.14);
+
+    --blue:         #4dc7ff;        /* saturated sky */
+    --blue-deep:    #1a9fff;
+
+    --orange:       #ffa33c;        /* saturated warm */
+    --orange-deep:  #ff8800;
+
+    --pink:         #ff5fa0;
+    --pink-deep:    #ff2e7e;
+
+    --purple:       #c07cff;
+    --purple-deep:  #a347ff;
+
+    --red:          #ff5757;
+
+    --axis-x:       #ff5572;
+    --axis-y:       #5eff8c;
+    --axis-z:       #5aa8ff;
+
+    /* font sizes — bumped for projector viewing */
+    --fs-base:      15px;
+    --fs-small:     13px;
+    --fs-xs:        11.5px;
+    --fs-mono:      14px;
+    --fs-mono-sm:   12.5px;
+    --fs-title:     15px;
+    --fs-h-brand:   18px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', sans-serif;
+    height: 100vh; overflow: hidden;
+    font-size: var(--fs-base);
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 42px 42px; opacity: 0.18;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ============ LAYOUT ============ */
+  .app {
+    display: grid;
+    grid-template-columns: 360px 1fr 460px;
+    height: 100vh; position: relative; z-index: 1;
+    transition: grid-template-columns 0.28s ease;
+  }
+  .panel {
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    display: flex; flex-direction: column;
+  }
+  .panel.right { border-right: none; border-left: 1px solid var(--border); transition: border-color 0.28s; }
+
+  /* --- RIGHT PANEL COLLAPSED --- */
+  .app.right-collapsed {
+    grid-template-columns: 360px 1fr 0px;
+  }
+  .app.right-collapsed > .panel.right {
+    overflow: hidden;
+    border-left-color: transparent;
+  }
+
+  /* --- FULLSCREEN MODE ---
+     We hide the left panel and viewport entirely and let the right panel
+     occupy the full window. The grid collapses to a single column. */
+  .app.deriv-fullscreen {
+    grid-template-columns: 1fr;
+  }
+  .app.deriv-fullscreen > .panel:first-child,
+  .app.deriv-fullscreen > .viewport {
+    display: none;
+  }
+  .app.deriv-fullscreen > .panel.right {
+    border-left: none;
+  }
+
+  .brand { padding: 20px 22px; border-bottom: 1px solid var(--border); }
+  .brand h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-h-brand); font-weight: 700;
+    color: var(--text); letter-spacing: -0.01em;
+  }
+  .brand h1 span { color: var(--accent); }
+  .brand p {
+    margin-top: 6px; font-size: var(--fs-small);
+    color: var(--text-faint);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.02em;
+  }
+
+  .section { padding: 18px 22px; border-bottom: 1px solid var(--border); }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-xs); letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--text-dim);
+    margin-bottom: 14px; font-weight: 600;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; padding: 3px 9px;
+    border: 1px solid var(--accent-deep);
+    border-radius: 3px; color: var(--accent);
+    letter-spacing: 0.12em; font-weight: 600;
+    background: var(--accent-soft);
+  }
+
+  /* ============ DH TABLE ============ */
+  .dh-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-mono-sm); }
+  .dh-table th {
+    text-align: center; padding: 9px 4px;
+    font-weight: 600; color: var(--text-dim);
+    font-size: var(--fs-xs); letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--border-bright);
+  }
+  .dh-table td { padding: 6px 3px; }
+  .dh-table td:first-child {
+    color: var(--accent); font-weight: 700;
+    text-align: center; width: 32px; font-size: var(--fs-mono);
+  }
+  .dh-input {
+    width: 100%; background: var(--bg-soft);
+    border: 1px solid var(--border-bright); color: var(--text);
+    padding: 9px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-mono-sm); text-align: center;
+    border-radius: 3px; font-weight: 600;
+    transition: border 0.15s, background 0.15s;
+  }
+  .dh-input:focus { outline: none; border-color: var(--accent); background: #0a1018; }
+  .dh-input.joint-var {
+    background: var(--accent-soft);
+    border-color: var(--accent-deep);
+    color: var(--accent);
+  }
+
+  .joint-ctrl {
+    display: grid; grid-template-columns: 76px 1fr 66px;
+    gap: 12px; align-items: center; margin-bottom: 12px;
+  }
+  .joint-ctrl label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-mono-sm); color: var(--text-dim);
+    font-weight: 600;
+  }
+  .joint-ctrl label b { color: var(--accent); font-weight: 700; }
+  .slider {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 4px;
+    background: var(--border-bright);
+    outline: none; border-radius: 2px;
+  }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent); cursor: pointer;
+    box-shadow: 0 0 0 4px rgba(0, 255, 170, 0.2);
+    border: 2px solid var(--bg);
+  }
+  .slider::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent); cursor: pointer;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 4px rgba(0, 255, 170, 0.2);
+  }
+  .joint-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-mono-sm); color: var(--accent);
+    text-align: right; font-weight: 700;
+  }
+
+  .ik-input-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 14px;
+  }
+  .ik-input-row label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-xs); color: var(--text-dim);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 6px; font-weight: 600;
+  }
+  .ik-input-row input {
+    width: 100%; background: var(--bg-soft);
+    border: 1px solid var(--border-bright); color: var(--text);
+    padding: 11px 13px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-mono); border-radius: 3px; font-weight: 600;
+  }
+  .ik-input-row input:focus { outline: none; border-color: var(--accent); }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn {
+    padding: 12px; background: transparent;
+    border: 1px solid var(--border-strong); color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-xs); letter-spacing: 0.14em;
+    text-transform: uppercase; cursor: pointer;
+    border-radius: 3px; transition: all 0.15s;
+    font-weight: 700;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary {
+    background: var(--accent); color: #001a13;
+    border-color: var(--accent); font-weight: 800;
+  }
+  .btn.primary:hover { background: #1aff99; }
+
+  /* ============ VIEWPORT ============ */
+  .viewport {
+    position: relative;
+    background: radial-gradient(ellipse at center, #FFFFFF 0%, #ECECEA 100%);
+    overflow: hidden;
+  }
+  #canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+  #canvas:active { cursor: grabbing; }
+  .vp-overlay-tl, .vp-overlay-tr, .vp-overlay-bl, .vp-overlay-br {
+    position: absolute; z-index: 10;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-xs); color: var(--text-dim);
+    letter-spacing: 0.1em; pointer-events: none;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.7);
+  }
+  .vp-overlay-tl { top: 20px; left: 24px; }
+  .vp-overlay-tr { top: 20px; right: 24px; text-align: right; }
+  .vp-overlay-bl { bottom: 20px; left: 24px; }
+  .vp-overlay-br { bottom: 20px; right: 24px; text-align: right; }
+  .vp-overlay-br button { pointer-events: auto; }
+  .vp-title {
+    font-size: var(--fs-small); color: var(--text);
+    letter-spacing: 0.22em; text-transform: uppercase;
+    margin-bottom: 5px; font-weight: 700;
+  }
+  .vp-title::before { content: '▸ '; color: var(--accent); }
+  .vp-coord { color: var(--accent); font-size: var(--fs-small); font-weight: 600; }
+  .vp-coord b { color: var(--text); margin-right: 6px; font-weight: 500; }
+  .legend { display: flex; gap: 18px; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-weight: 600; }
+  .legend-dot { width: 14px; height: 3px; }
+  .legend-dot.x { background: var(--axis-x); }
+  .legend-dot.y { background: var(--axis-y); }
+  .legend-dot.z { background: var(--axis-z); }
+  .vp-ctrl-hint {
+    font-size: 11px; color: var(--text-faint);
+    margin-top: 5px; letter-spacing: 0.1em; font-weight: 500;
+  }
+
+  /* ============ TABS ============ */
+  .tabs {
+    display: flex; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+    background: var(--bg-panel); z-index: 5;
+  }
+  .tab {
+    flex: 1; padding: 14px 6px;
+    background: transparent; border: none; color: var(--text-faint);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-xs); letter-spacing: 0.14em;
+    text-transform: uppercase; cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s; font-weight: 700;
+  }
+  .tab:hover { color: var(--text-dim); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: var(--bg-soft);
+  }
+
+  /* ============ FK / IK CONTENT ============ */
+  .tab-content { display: none; padding: 20px 24px; }
+  .tab-content.active { display: block; }
+
+  .calc-step {
+    margin-bottom: 22px; padding-bottom: 20px;
+    border-bottom: 1px dashed var(--border-bright);
+  }
+  .calc-step:last-child { border-bottom: none; }
+  .step-header {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 12px;
+  }
+  .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: #001a13;
+    background: var(--accent); padding: 4px 9px;
+    border-radius: 3px; font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+  .step-title {
+    font-family: 'Inter', sans-serif;
+    font-size: var(--fs-title); font-weight: 600; color: var(--text);
+  }
+  .step-desc {
+    font-size: var(--fs-base); color: var(--text-dim);
+    margin-bottom: 12px; line-height: 1.65;
+  }
+  .step-desc code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-soft); padding: 2px 7px;
+    border-radius: 3px; color: var(--blue); font-size: var(--fs-mono-sm);
+    font-weight: 600; border: 1px solid var(--border);
+  }
+  .step-desc b { color: var(--text); font-weight: 600; }
+
+  .matrix {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-mono-sm); background: var(--bg-soft);
+    border: 1px solid var(--border-bright); border-radius: 3px;
+    padding: 14px 16px; color: var(--text);
+    overflow-x: auto; position: relative; line-height: 1.75;
+    font-weight: 500;
+  }
+  .matrix::before {
+    content: ''; position: absolute;
+    left: 4px; top: 10px; bottom: 10px;
+    width: 2px; background: var(--accent);
+  }
+  .matrix-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-xs); color: var(--accent);
+    letter-spacing: 0.12em; font-weight: 700;
+    margin-bottom: 7px; margin-top: 12px;
+  }
+  .matrix pre { font-family: inherit; white-space: pre; }
+
+  .result-box {
+    background: linear-gradient(135deg, rgba(0, 255, 170, 0.14), rgba(0, 255, 170, 0.04));
+    border: 1px solid var(--accent-deep);
+    padding: 16px 18px; border-radius: 3px; margin-top: 14px;
+  }
+  .result-box .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-xs); color: var(--accent);
+    letter-spacing: 0.14em; text-transform: uppercase;
+    margin-bottom: 10px; font-weight: 700;
+  }
+  .result-box .val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-mono); color: var(--text);
+    line-height: 1.7; font-weight: 600;
+  }
+  .result-box .val b { color: var(--accent); margin-right: 8px; font-weight: 500; }
+
+  .ik-status {
+    padding: 13px 16px; background: var(--bg-soft);
+    border-left: 3px solid var(--orange);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-mono-sm); color: var(--text-dim);
+    margin-bottom: 18px; font-weight: 600;
+    border-radius: 0 3px 3px 0;
+  }
+  .ik-status.ok { border-left-color: var(--accent); color: var(--accent); background: rgba(0, 255, 170, 0.08); }
+  .ik-status.err { border-left-color: var(--red); color: var(--red); background: rgba(255, 87, 87, 0.08); }
+
+  .sol-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-top: 12px;
+  }
+  .sol-card {
+    background: var(--bg-soft); border: 1px solid var(--border-bright);
+    padding: 14px; border-radius: 3px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .sol-card:hover { border-color: var(--accent); }
+  .sol-card.active {
+    border-color: var(--accent);
+    background: rgba(0, 255, 170, 0.1);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+  .sol-card .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-xs); color: var(--accent);
+    letter-spacing: 0.12em; margin-bottom: 6px; font-weight: 700;
+  }
+  .sol-card .vals {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-mono-sm); color: var(--text);
+    line-height: 1.7; font-weight: 600;
+  }
+
+  /* ============ DERIVATION TAB ============ */
+  #tab-deriv { padding: 0; }
+  .deriv-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-soft);
+    position: sticky; top: 0; z-index: 4;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .deriv-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-title); color: var(--text);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    font-weight: 700;
+  }
+  .deriv-title::before { content: '◢ '; color: var(--accent); }
+  .deriv-subtabs { display: flex; gap: 6px; }
+  .deriv-subtab {
+    padding: 9px 20px;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-xs); letter-spacing: 0.14em;
+    text-transform: uppercase; cursor: pointer;
+    border-radius: 3px; transition: all 0.15s;
+    font-weight: 700;
+  }
+  .deriv-subtab:hover { color: var(--text); border-color: var(--accent-deep); }
+  .deriv-subtab.active {
+    background: var(--accent); color: #001a13;
+    border-color: var(--accent); font-weight: 800;
+  }
+  .deriv-fs-btn {
+    padding: 9px 15px;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-xs); letter-spacing: 0.12em;
+    cursor: pointer; border-radius: 3px; transition: all 0.15s;
+    font-weight: 700;
+  }
+  .deriv-fs-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .deriv-body {
+    padding: 32px 36px 100px 36px;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  .app.deriv-fullscreen .deriv-body {
+    padding: 44px 80px 120px 80px;
+    max-width: 1200px;
+  }
+  .app.deriv-fullscreen .deriv-header {
+    padding: 22px 80px;
+  }
+  .app.deriv-fullscreen .chapter-title { font-size: 28px; }
+  .app.deriv-fullscreen .deriv-body p,
+  .app.deriv-fullscreen .deriv-body .text,
+  .app.deriv-fullscreen .deriv-list { font-size: 17px; }
+  .app.deriv-fullscreen .equation { font-size: 16px; padding: 18px 22px; }
+  .app.deriv-fullscreen .note { font-size: 15px; }
+
+  .deriv-sub { display: none; }
+  .deriv-sub.active { display: block; }
+
+  .chapter {
+    margin-bottom: 52px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .chapter:last-child { border-bottom: none; }
+  .chapter-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 22px;
+  }
+  .chapter-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; letter-spacing: 0.18em;
+    color: var(--accent);
+    padding: 6px 12px;
+    border: 1.5px solid var(--accent);
+    border-radius: 3px;
+    background: var(--accent-soft);
+    font-weight: 700;
+  }
+  .chapter-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--text); letter-spacing: -0.015em;
+  }
+  .chapter p, .chapter .text {
+    font-size: var(--fs-base); color: var(--text-dim);
+    line-height: 1.75; margin-bottom: 16px;
+  }
+  .chapter p b, .chapter .text b { color: var(--text); font-weight: 700; }
+  .chapter code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-soft); padding: 2px 7px;
+    border-radius: 3px; color: var(--blue);
+    font-size: var(--fs-mono-sm); font-weight: 600;
+    border: 1px solid var(--border);
+  }
+
+  .equation {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--fs-mono); background: var(--bg-soft);
+    border: 1px solid var(--border-bright);
+    border-left: 4px solid var(--blue);
+    padding: 16px 20px; margin: 16px 0;
+    color: var(--text); overflow-x: auto; line-height: 1.75;
+    border-radius: 0 3px 3px 0;
+    font-weight: 500;
+  }
+  .equation.highlight {
+    border-left-color: var(--accent);
+    background: rgba(0, 255, 170, 0.08);
+    box-shadow: 0 0 0 1px rgba(0, 255, 170, 0.15);
+  }
+  .equation pre { font-family: inherit; white-space: pre; }
+  .equation b { color: var(--accent); font-weight: 700; }
+  .eq-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--accent);
+    letter-spacing: 0.22em; text-transform: uppercase;
+    margin-bottom: 8px; font-weight: 700;
+  }
+
+  .note {
+    font-size: 14px; color: var(--text-dim);
+    margin: 12px 0; line-height: 1.75;
+    padding: 14px 18px;
+    background: rgba(77, 199, 255, 0.08);
+    border-left: 3px solid var(--blue);
+    border-radius: 0 3px 3px 0;
+  }
+  .note b { color: var(--text); font-weight: 700; }
+  .note code {
+    background: var(--bg-soft); padding: 2px 6px;
+    border-radius: 3px; color: var(--blue); font-weight: 600;
+    border: 1px solid var(--border);
+  }
+
+  .deriv-list {
+    font-size: var(--fs-base); color: var(--text-dim);
+    line-height: 1.95; padding-left: 28px; margin-bottom: 16px;
+  }
+  .deriv-list li { margin-bottom: 5px; }
+  .deriv-list code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-soft); padding: 2px 6px;
+    border-radius: 3px; color: var(--blue);
+    font-size: var(--fs-mono-sm); font-weight: 600;
+    border: 1px solid var(--border);
+  }
+  .deriv-list b { color: var(--text); font-weight: 700; }
+
+  .figure {
+    margin: 28px 0;
+    padding: 24px;
+    background: #0a1018;
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    text-align: center;
+  }
+  .figure svg { max-width: 100%; height: auto; }
+  .figure-caption {
+    margin-top: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    line-height: 1.7; font-weight: 500;
+  }
+  .figure-caption b { color: var(--accent); font-weight: 700; }
+
+  .two-col {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 24px; margin: 18px 0;
+  }
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent-deep); }
+
+  .hint {
+    font-size: var(--fs-mono-sm);
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.6;
+    padding: 12px 14px; background: var(--bg-soft);
+    border-left: 2px solid var(--border-strong);
+    margin-top: 14px; font-weight: 500;
+  }
+
+  /* SVG-specific styles — high-contrast for projectors */
+  .svg-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; fill: var(--text);
+    font-weight: 600;
+  }
+  .svg-label-dim { fill: var(--text-dim); }
+  .svg-label-accent { fill: var(--accent); font-weight: 700; }
+
+.brand{padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.brand-inner{display:flex;align-items:center;}
+.orca-logo{display:flex;align-items:center;gap:11px;}
+.orca-logo-img{width:44px;height:44px;object-fit:contain;flex-shrink:0;}
+.brand-wordmark{display:flex;flex-direction:column;gap:2px;}
+.brand-name{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:.14em;color:#ffffff;line-height:1;}
+.brand-name span{color:#00e5cc;}
+.brand-sub{font-family:'Space Mono',monospace;font-size:9px;color:#00e5cc;letter-spacing:.13em;text-transform:uppercase;opacity:0.75;}
+
+.brand h1{display:none;}
+.brand p{display:none;}
+.vp-title::before{color:var(--accent)!important;}
+.deriv-title::before{color:var(--accent)!important;}
+.step-num{color:var(--accent)!important;}
+.badge{background:rgba(0,229,204,0.12)!important;color:var(--accent)!important;border:1px solid rgba(0,229,204,0.3)!important;}
+.deriv-subtab.active{border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(0,229,204,0.08)!important;}
+.result-box .label{color:var(--accent)!important;}
+
+</style>
+<style id="orca-theme-override">
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
+:root{--bg:#F7F7F5;--bg-panel:#FFFFFF;--bg-soft:#F0F0EE;--bg-elev:#F7F7F5;--surface:#FFFFFF;--card:#F7F7F5;--border:#DDDDDD;--border2:#E8E8E8;--border-bright:#CCCCCC;--border-strong:#AAAAAA;--text:#111111;--text-dim:#555555;--text-faint:#888888;--dim:#666666;--faint:#CCCCCC;--gold:#E87722;--accent:#E87722;--accent-deep:#D06820;--accent-soft:rgba(232,119,34,0.10);--r:4px;}
+html,body{background:#F7F7F5!important;color:#111111!important;font-family:'DM Sans',system-ui,sans-serif!important;}
+body{padding-top:52px!important;}
+body::before{display:none!important;}
+.app,.shell{height:calc(100vh - 52px)!important;max-height:calc(100vh - 52px)!important;}
+/* Panels */
+.panel,.left,.right{background:#FFFFFF!important;color:#111111!important;}
+aside.panel,aside.left,aside.right{background:#FFFFFF!important;}
+/* Brand — hide logo + company name, show only tool subtitle */
+.brand{background:#FFFFFF!important;border-bottom:1px solid #DDDDDD!important;padding:10px 18px!important;}
+.brand img,.brand .orca-logo-img{display:none!important;}
+.brand .orca-name,.brand .brand-name,.brand-name,.orca-name{display:none!important;}
+.orca-sub,.brand-sub{display:block!important;color:#888888!important;font-family:'IBM Plex Mono',monospace!important;font-size:11px!important;font-weight:600!important;letter-spacing:.18em!important;text-transform:uppercase!important;}
+.orca-brand,.orca-wordmark{display:block!important;}
+/* Sections */
+.section{border-bottom:1px solid #DDDDDD!important;}
+.section-label,.sec-label{color:#555555!important;font-family:'IBM Plex Mono',monospace!important;}
+/* Inputs */
+.inp,.dh-input{background:#F0F0EE!important;border:1px solid #CCCCCC!important;color:#111111!important;}
+.inp:focus,.dh-input:focus{border-color:#E87722!important;}
+.dh-input.joint-var{background:rgba(232,119,34,0.08)!important;border-color:rgba(232,119,34,0.4)!important;color:#E87722!important;}
+.with-unit .unit{color:#888888!important;}
+/* Sliders */
+.slider{background:#DDDDDD!important;}
+.slider::-webkit-slider-thumb{background:#E87722!important;box-shadow:0 0 0 4px rgba(232,119,34,0.18)!important;}
+.jslider{background:#DDDDDD!important;}
+.jslider::-webkit-slider-thumb{background:var(--c,#E87722)!important;}
+.jval{font-family:'IBM Plex Mono',monospace!important;font-weight:600!important;}
+/* Joint label */
+.joint-ctrl label,.joint-label{color:#555555!important;font-family:'IBM Plex Mono',monospace!important;}
+.joint-val{color:#E87722!important;font-family:'IBM Plex Mono',monospace!important;}
+/* Buttons */
+.btn-calc{background:#111111!important;color:#FFFFFF!important;border-color:#111111!important;font-family:'IBM Plex Mono',monospace!important;}
+.btn-calc:hover{background:#E87722!important;border-color:#E87722!important;}
+.btn{border-color:#CCCCCC!important;color:#555555!important;font-family:'IBM Plex Mono',monospace!important;background:transparent!important;}
+.btn:hover{border-color:#E87722!important;color:#E87722!important;}
+.btn.primary{background:#111111!important;color:#FFFFFF!important;border-color:#111111!important;}
+.btn.primary:hover{background:#E87722!important;border-color:#E87722!important;}
+/* Tabs */
+.tabs{background:#FFFFFF!important;border-bottom:1px solid #DDDDDD!important;}
+.tab{color:#888888!important;font-family:'IBM Plex Mono',monospace!important;border-bottom:2px solid transparent!important;}
+.tab.active{color:#E87722!important;border-bottom-color:#E87722!important;background:#F7F7F5!important;}
+.tab-content,.tab-pane{background:#FFFFFF!important;color:#111111!important;}
+/* Nctrl */
+.nctrl{background:#F0F0EE!important;border-color:#CCCCCC!important;}
+.nctrl button{color:#E87722!important;}
+.nctrl button:hover{background:rgba(232,119,34,0.1)!important;}
+.nctrl span{color:#111111!important;}
+/* Trial row */
+.trial-row{background:#F0F0EE!important;border-color:#CCCCCC!important;}
+.trial-row::before{color:#AAAAAA!important;}
+/* Warn */
+.warn{color:#cc3333!important;background:rgba(204,51,51,0.06)!important;border-color:rgba(204,51,51,0.2)!important;}
+/* Metric */
+.metric{background:#F0F0EE!important;border-color:#CCCCCC!important;}
+.metric.hl{border-color:#E87722!important;}
+.metric .mlabel{color:#888888!important;font-family:'IBM Plex Mono',monospace!important;}
+.metric .mval{color:#111111!important;}
+.c-accent{color:#E87722!important;}
+.c-orange{color:#D06820!important;}
+.c-red{color:#cc3333!important;}
+/* Table */
+.tbl-wrap{background:#F7F7F5!important;border-color:#CCCCCC!important;}
+table{font-family:'IBM Plex Mono',monospace!important;}
+thead tr{background:#F0F0EE!important;}
+th{color:#555555!important;border-color:#CCCCCC!important;}
+td{color:#111111!important;border-color:#E8E8E8!important;}
+td:first-child{color:#888888!important;}
+tbody tr:hover{background:rgba(0,0,0,0.02)!important;}
+.badge{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:20px!important;font-size:10px!important;}
+.bg{background:rgba(232,119,34,0.1)!important;color:#E87722!important;border:1px solid rgba(232,119,34,0.3)!important;}
+.bw{background:rgba(180,130,0,0.1)!important;color:#9a7000!important;border:1px solid rgba(180,130,0,0.3)!important;}
+.bb{background:rgba(180,0,0,0.1)!important;color:#cc3333!important;border:1px solid rgba(180,0,0,0.3)!important;}
+/* Calc steps */
+.step{background:#F0F0EE!important;border-color:#CCCCCC!important;}
+.step-hd{}
+.step-n{background:#E87722!important;color:#fff!important;border-color:transparent!important;font-family:'IBM Plex Mono',monospace!important;}
+.step-t{color:#111111!important;font-family:'DM Sans',sans-serif!important;}
+.step-desc{color:#555555!important;font-family:'IBM Plex Mono',monospace!important;}
+.fbox{background:#F7F7F5!important;border-color:rgba(232,119,34,0.3)!important;color:#E87722!important;font-family:'IBM Plex Mono',monospace!important;}
+.fbox .ri{color:#D06820!important;}
+.placeholder{color:#AAAAAA!important;font-family:'IBM Plex Mono',monospace!important;}
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#DDDDDD!important;border-radius:2px;}
+/* Object picker */
+.obj-btn{background:#F0F0EE!important;border-color:#CCCCCC!important;color:#888888!important;font-family:'IBM Plex Mono',monospace!important;}
+.obj-btn:hover,.obj-btn.active{border-color:#E87722!important;color:#E87722!important;background:rgba(232,119,34,0.06)!important;}
+/* DOF counter */
+.dof-counter{border-top:1px solid #DDDDDD!important;background:#FFFFFF!important;}
+.counter-num{color:#E87722!important;text-shadow:none!important;font-family:'Syne',sans-serif!important;}
+.counter-label,.counter-info{color:#888888!important;font-family:'IBM Plex Mono',monospace!important;}
+/* DOF toggles */
+.dof-toggle{background:#F0F0EE!important;border-color:#CCCCCC!important;}
+.dof-name{color:#111111!important;font-family:'IBM Plex Mono',monospace!important;}
+.dof-desc{color:#888888!important;font-size:12px!important;}
+.dof-check{border-color:#CCCCCC!important;}
+.dof-divider{color:#AAAAAA!important;border-color:#DDDDDD!important;font-family:'IBM Plex Mono',monospace!important;}
+/* Explain hero (right panel) */
+.explain-hero{background:rgba(232,119,34,0.04)!important;border-bottom:1px solid #DDDDDD!important;}
+.explain-hero .num{color:#E87722!important;text-shadow:none!important;font-family:'Syne',sans-serif!important;}
+.explain-hero .label{color:#888888!important;font-family:'IBM Plex Mono',monospace!important;}
+.explain-hero .stmt{color:#555555!important;}
+.dof-list{border-bottom:1px solid #DDDDDD!important;}
+.dof-list-item{border-bottom:1px solid #DDDDDD!important;}
+.dof-badge{font-family:'IBM Plex Mono',monospace!important;}
+.dof-item-text .name{color:#111111!important;}
+.dof-item-text .desc{color:#555555!important;}
+.dof-item-text .example{color:#AAAAAA!important;font-family:'IBM Plex Mono',monospace!important;}
+/* Examples */
+.examples .sec-label{color:#888888!important;}
+.example-card{background:#F0F0EE!important;border-color:#CCCCCC!important;}
+.example-card:hover{border-color:#E87722!important;}
+.ex-head .ex-name{color:#111111!important;}
+.ex-dof{color:#E87722!important;font-family:'IBM Plex Mono',monospace!important;}
+.ex-desc{color:#555555!important;}
+.ex-tag{font-family:'IBM Plex Mono',monospace!important;}
+.reset-btn{background:#FFFFFF!important;border-color:#CCCCCC!important;color:#888888!important;font-family:'IBM Plex Mono',monospace!important;}
+.reset-btn:hover{border-color:#111111!important;color:#111111!important;}
+/* Finger sections */
+.finger-sec{background:#F0F0EE!important;border-color:#CCCCCC!important;}
+.finger-header:hover{background:rgba(0,0,0,0.02)!important;}
+.finger-body{border-top:1px solid #DDDDDD!important;background:#F7F7F5!important;}
+.finger-name{color:#111111!important;}
+.finger-dof{color:#888888!important;font-family:'IBM Plex Mono',monospace!important;}
+.finger-chevron{color:#AAAAAA!important;}
+.pose-grid .pose-btn{background:#F0F0EE!important;border-color:#CCCCCC!important;color:#888888!important;}
+.pose-btn:hover{border-color:#E87722!important;color:#E87722!important;}
+.pose-btn.active{border-color:#E87722!important;background:rgba(232,119,34,0.08)!important;color:#E87722!important;}
+.anim-btn{border-color:#CCCCCC!important;color:#888888!important;background:transparent!important;font-family:'IBM Plex Mono',monospace!important;}
+.anim-btn.on{border-color:#E87722!important;color:#E87722!important;background:rgba(232,119,34,0.06)!important;}
+/* Info hero */
+.info-hero{border-bottom:1px solid #DDDDDD!important;}
+.info-hero .big{color:#E87722!important;text-shadow:none!important;font-family:'Syne',sans-serif!important;}
+.info-hero .label{color:#888888!important;font-family:'IBM Plex Mono',monospace!important;}
+.info-hero .stmt{color:#555555!important;}
+.info-sec{border-bottom:1px solid #DDDDDD!important;}
+.info-title{color:#888888!important;font-family:'IBM Plex Mono',monospace!important;}
+.fact-row .fact-text{color:#555555!important;}
+.fact-text b{color:#111111!important;}
+.joint-table th{color:#888888!important;font-family:'IBM Plex Mono',monospace!important;border-color:#DDDDDD!important;}
+.joint-table td{color:#555555!important;border-color:#DDDDDD!important;}
+.joint-table td:first-child{color:#111111!important;}
+/* Right panel legend */
+.right .sec-label{color:#888888!important;}
+/* DH table */
+.dh-table th{color:#555555!important;border-color:#CCCCCC!important;font-family:'IBM Plex Mono',monospace!important;}
+/* IK */
+.ik-input-row label{color:#555555!important;font-family:'IBM Plex Mono',monospace!important;}
+.ik-input-row input{background:#F0F0EE!important;border-color:#CCCCCC!important;color:#111111!important;font-family:'IBM Plex Mono',monospace!important;}
+.ik-status{border-left-color:#E87722!important;background:#F0F0EE!important;color:#555555!important;font-family:'IBM Plex Mono',monospace!important;}
+.ik-status.ok{background:rgba(232,119,34,0.06)!important;color:#E87722!important;border-left-color:#E87722!important;}
+.ik-status.err{background:rgba(200,0,0,0.04)!important;color:#cc3333!important;border-left-color:#cc3333!important;}
+.sol-card{background:#F0F0EE!important;border-color:#CCCCCC!important;}
+.sol-card:hover{border-color:#E87722!important;}
+.sol-card.active{border-color:#E87722!important;background:rgba(232,119,34,0.08)!important;box-shadow:none!important;}
+.sol-card .name{color:#E87722!important;font-family:'IBM Plex Mono',monospace!important;}
+.sol-card .vals{color:#111111!important;font-family:'IBM Plex Mono',monospace!important;}
+/* Deriv tab */
+.deriv-header{background:#F0F0EE!important;border-color:#DDDDDD!important;}
+.deriv-title{color:#111111!important;font-family:'Syne',sans-serif!important;}
+.deriv-title::before{color:#E87722!important;}
+.deriv-subtab{border-color:#CCCCCC!important;color:#888888!important;font-family:'IBM Plex Mono',monospace!important;background:transparent!important;}
+.deriv-subtab:hover{border-color:#E87722!important;color:#E87722!important;}
+.deriv-subtab.active{background:#111111!important;color:#FFFFFF!important;border-color:#111111!important;}
+.deriv-fs-btn{border-color:#CCCCCC!important;color:#888888!important;font-family:'IBM Plex Mono',monospace!important;}
+.chapter-header{}
+.chapter-num{border-color:#E87722!important;color:#E87722!important;background:rgba(232,119,34,0.08)!important;font-family:'IBM Plex Mono',monospace!important;}
+.chapter-title{color:#111111!important;font-family:'Syne',sans-serif!important;}
+.chapter p,.chapter .text{color:#555555!important;}
+.chapter code{background:#F0F0EE!important;color:#E87722!important;border-color:#CCCCCC!important;}
+.equation{background:#F0F0EE!important;border-color:#CCCCCC!important;border-left-color:#555555!important;color:#111111!important;font-family:'IBM Plex Mono',monospace!important;}
+.equation.highlight{background:rgba(232,119,34,0.06)!important;border-left-color:#E87722!important;box-shadow:none!important;}
+.eq-label{color:#E87722!important;font-family:'IBM Plex Mono',monospace!important;}
+.note{background:rgba(0,0,0,0.03)!important;border-left-color:#AAAAAA!important;color:#555555!important;}
+.note b{color:#111111!important;}
+.figure{background:#F0F0EE!important;border-color:#CCCCCC!important;}
+.figure-caption{color:#555555!important;font-family:'IBM Plex Mono',monospace!important;}
+.matrix{background:#F0F0EE!important;border-color:#CCCCCC!important;color:#111111!important;font-family:'IBM Plex Mono',monospace!important;}
+.matrix::before{background:#E87722!important;}
+.matrix-label{color:#E87722!important;font-family:'IBM Plex Mono',monospace!important;}
+.result-box{background:rgba(232,119,34,0.06)!important;border-color:#E87722!important;}
+.result-box .label{color:#E87722!important;font-family:'IBM Plex Mono',monospace!important;}
+.result-box .val{color:#111111!important;font-family:'IBM Plex Mono',monospace!important;}
+.result-box .val b{color:#E87722!important;}
+.step-header{}
+.step-num{background:#E87722!important;color:#fff!important;font-family:'IBM Plex Mono',monospace!important;}
+.step-title{color:#111111!important;font-family:'DM Sans',sans-serif!important;}
+.step-desc{color:#555555!important;}
+.step-desc code{background:#F0F0EE!important;color:#E87722!important;border-color:#CCCCCC!important;}
+.hint{background:#F0F0EE!important;border-left-color:#CCCCCC!important;color:#555555!important;font-family:'IBM Plex Mono',monospace!important;}
+.badge.badge-std,aside .badge{background:rgba(232,119,34,0.10)!important;color:#E87722!important;border-color:rgba(232,119,34,0.3)!important;font-family:'IBM Plex Mono',monospace!important;}
+/* Viewport title overlay (on light canvas area) */
+.vp-overlay-tl,.vp-overlay-tr,.vp-overlay-bl,.vp-overlay-br{text-shadow:0 1px 2px rgba(255,255,255,0.7)!important;color:#555555!important;}
+.vp-title{color:rgba(17,17,17,0.6)!important;font-family:'IBM Plex Mono',monospace!important;letter-spacing:.2em!important;}
+.vp-title::before{color:#E87722!important;}
+.vp-coord b{color:rgba(85,85,85,0.8)!important;}
+.vp-coord span,.vp-coord{color:#E87722!important;font-family:'IBM Plex Mono',monospace!important;}
+.vp-ctrl-hint,.vp-hint{color:rgba(85,85,85,0.55)!important;font-family:'IBM Plex Mono',monospace!important;}
+.legend-item{font-family:'IBM Plex Mono',monospace!important;}
+#workspace-info{color:rgba(85,85,85,0.7)!important;font-family:'IBM Plex Mono',monospace!important;}
+#wv-toggle-btn,#rp-collapse-btn{font-family:'IBM Plex Mono',monospace!important;}
+.deriv-list{color:#555555!important;}
+.deriv-list li{color:#555555!important;}
+.deriv-list code{background:#F0F0EE!important;color:#E87722!important;border-color:#CCCCCC!important;font-family:'IBM Plex Mono',monospace!important;}
+.deriv-list b{color:#111111!important;}
+</style>
+<style id="mobile-fix">
+@media (max-width: 860px) {
+  html, body { height: auto !important; min-height: 100% !important; overflow-x: hidden !important; overflow-y: auto !important; }
+  .app, .shell { grid-template-columns: 1fr !important; height: auto !important; max-height: none !important; }
+  .panel, .panel.right, aside.panel { overflow: visible !important; border-left: none !important; border-right: none !important; border-bottom: 1px solid var(--border) !important; }
+  .viewport { height: 64vh !important; min-height: 360px !important; }
+  .app.right-collapsed { grid-template-columns: 1fr !important; }
+  .tabs { position: static !important; }
+  #orca-topnav { padding: 0 14px !important; }
+}
+</style>
+</head>
+<body>
+<nav id="orca-topnav" style="position:fixed;top:0;left:0;right:0;height:52px;background:#FFFFFF;border-bottom:1px solid #DDDDDD;z-index:9999;display:flex;align-items:center;padding:0 20px;gap:14px;box-sizing:border-box;">
+  <a href="index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;">
+    <img src="assets/orca-mark.png" alt="" style="height:28px;width:auto;" />
+    <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:#111111;letter-spacing:0.01em;">Orca Robotics</span>
+  </a>
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#888888;letter-spacing:0.14em;text-transform:uppercase;">— 2R Robot Simulator</span>
+  <a href="simulators.html" style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#555555;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;border:1px solid #DDDDDD;padding:6px 14px;border-radius:3px;flex-shrink:0;" onmouseover="this.style.cssText+=';border-color:#E87722;color:#E87722'" onmouseout="this.style.borderColor='#DDDDDD';this.style.color='#555555'">&#8592; Simulators</a>
+</nav>
+<div class="app" id="app">
+
+  <aside class="panel">
+    <div class="brand" style="padding:10px 18px;border-bottom:1px solid #DDDDDD;">
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#888888;">2-DOF Planar Manipulator · DH Kinematics</span>
+</div>
+
+  <div class="section">
+      <div class="section-label"><span>DH Parameter Table</span><span class="badge">STD</span></div>
+      <table class="dh-table">
+        <thead>
+          <tr><th>i</th><th>θᵢ (°)</th><th>dᵢ</th><th>aᵢ</th><th>αᵢ (°)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><input class="dh-input joint-var" id="theta1" type="number" step="1" value="30"/></td>
+            <td><input class="dh-input" id="d1" type="number" step="0.1" value="0"/></td>
+            <td><input class="dh-input" id="a1" type="number" step="0.1" value="2"/></td>
+            <td><input class="dh-input" id="alpha1" type="number" step="1" value="0"/></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><input class="dh-input joint-var" id="theta2" type="number" step="1" value="45"/></td>
+            <td><input class="dh-input" id="d2" type="number" step="0.1" value="0"/></td>
+            <td><input class="dh-input" id="a2" type="number" step="0.1" value="1.5"/></td>
+            <td><input class="dh-input" id="alpha2" type="number" step="1" value="0"/></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="hint">
+        θ = joint angle · d = link offset · a = link length · α = link twist.
+        Highlighted θ cells are joint variables.
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Joint Controls</div>
+      <div class="joint-ctrl">
+        <label>θ₁ <b>/deg</b></label>
+        <input type="range" class="slider" id="j1-slider" min="-180" max="180" step="1" value="30"/>
+        <div class="joint-val" id="j1-val">30°</div>
+      </div>
+      <div class="joint-ctrl">
+        <label>θ₂ <b>/deg</b></label>
+        <input type="range" class="slider" id="j2-slider" min="-180" max="180" step="1" value="45"/>
+        <div class="joint-val" id="j2-val">45°</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Inverse Kinematics — Target</div>
+      <div class="ik-input-row">
+        <div><label>X target</label><input type="number" id="target-x" step="0.1" value="2.5"/></div>
+        <div><label>Y target</label><input type="number" id="target-y" step="0.1" value="1.5"/></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btn-reset">Reset</button>
+        <button class="btn primary" id="btn-solve">Solve IK</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="viewport">
+    <canvas id="canvas"></canvas>
+    <div class="vp-overlay-tl">
+      <div class="vp-title">viewport · 3d</div>
+      <div>perspective</div>
+      <div class="vp-ctrl-hint">LMB orbit · RMB pan · wheel zoom</div>
+    </div>
+    <div class="vp-overlay-tr">
+      <div class="vp-title">end-effector</div>
+      <div class="vp-coord"><b>X</b><span id="ee-x">0.000</span></div>
+      <div class="vp-coord"><b>Y</b><span id="ee-y">0.000</span></div>
+      <div class="vp-coord"><b>Z</b><span id="ee-z">0.000</span></div>
+      <div class="vp-coord"><b>φ</b><span id="ee-phi">0.0°</span></div>
+    </div>
+    <div class="vp-overlay-bl">
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot x"></div><span>X</span></div>
+        <div class="legend-item"><div class="legend-dot y"></div><span>Y</span></div>
+        <div class="legend-item"><div class="legend-dot z"></div><span>Z</span></div>
+      </div>
+    </div>
+    <div class="vp-overlay-br">
+      <div id="workspace-info">reach · min 0.00 · max 0.00</div>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+        <button id="wv-toggle-btn" onclick="toggleWorkspaceViz()" style="background:rgba(0,255,170,0.15);border:1px solid #00cc88;color:#00ffaa;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border-radius:3px;cursor:pointer;">&#9711; Show Workspace</button>
+        <button id="rp-collapse-btn" onclick="toggleRightPanel()" style="background:rgba(0,229,204,0.12);border:1px solid #00e5cc;color:#00e5cc;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border-radius:3px;cursor:pointer;" title="Collapse right panel">&#9654; Hide Panel</button>
+      </div>
+    </div>
+  </main>
+
+  <aside class="panel right">
+    <div class="tabs">
+      <button class="tab active" data-tab="fk">FK</button>
+      <button class="tab" data-tab="ik">IK</button>
+      <button class="tab" data-tab="wv">Work Volume</button>
+          </div>
+
+    <div class="tab-content active" id="tab-fk"><div id="fk-content"></div></div>
+    <div class="tab-content" id="tab-ik"><div id="ik-content">
+      <div class="ik-status">click “solve ik” with a target to see step-by-step solution</div>
+    </div></div>
+    <div class="tab-content" id="tab-wv"><div id="wv-content"></div></div>
+
+  </aside>
+
+</div>
+
+<script>
+/* ========================================================================
+   AXIS MAPPING:
+   planar +x → world +X (red)   planar +y → world −Z (green)   planar +z → world +Y (blue)
+   link rotations use Three.js rotation.y = +θ
+   ====================================================================== */
+
+const deg2rad = d => d * Math.PI / 180;
+const rad2deg = r => r * 180 / Math.PI;
+const fmt = (n, p = 3) => (Math.abs(n) < 1e-10 ? 0 : n).toFixed(p);
+
+function dhMatrix(theta, d, a, alpha) {
+  const ct = Math.cos(theta), st = Math.sin(theta);
+  const ca = Math.cos(alpha), sa = Math.sin(alpha);
+  return [
+    [ct, -st * ca,  st * sa, a * ct],
+    [st,  ct * ca, -ct * sa, a * st],
+    [0,   sa,       ca,      d     ],
+    [0,   0,        0,       1     ]
+  ];
+}
+function matMul(A, B) {
+  const R = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+  for (let i = 0; i < 4; i++)
+    for (let j = 0; j < 4; j++)
+      for (let k = 0; k < 4; k++) R[i][j] += A[i][k] * B[k][j];
+  return R;
+}
+function formatMatrix(M, pad = 8) {
+  return M.map(row => row.map(v => fmt(v).padStart(pad)).join('  ')).join('\n');
+}
+
+const state = {
+  theta1: 30, d1: 0, a1: 2, alpha1: 0,
+  theta2: 45, d2: 0, a2: 1.5, alpha2: 0,
+  targetX: 2.5, targetY: 1.5,
+  ikSolution: null, activeSolution: 'a'
+};
+
+function readInputs() {
+  const g = id => parseFloat(document.getElementById(id).value) || 0;
+  state.theta1 = g('theta1'); state.theta2 = g('theta2');
+  state.d1 = g('d1'); state.a1 = g('a1'); state.alpha1 = g('alpha1');
+  state.d2 = g('d2'); state.a2 = g('a2'); state.alpha2 = g('alpha2');
+  state.targetX = g('target-x'); state.targetY = g('target-y');
+}
+
+function forwardKinematics() {
+  const t1 = deg2rad(state.theta1);
+  const t2 = deg2rad(state.theta2);
+  const a1 = deg2rad(state.alpha1);
+  const a2 = deg2rad(state.alpha2);
+  const T1 = dhMatrix(t1, state.d1, state.a1, a1);
+  const T2 = dhMatrix(t2, state.d2, state.a2, a2);
+  const T = matMul(T1, T2);
+  return {
+    T1, T2, T,
+    p0: [0, 0, 0],
+    p1: [T1[0][3], T1[1][3], T1[2][3]],
+    p2: [T[0][3], T[1][3], T[2][3]],
+    phi: Math.atan2(T[1][0], T[0][0])
+  };
+}
+
+function inverseKinematics(x, y) {
+  const a1 = state.a1, a2 = state.a2;
+  const r2 = x * x + y * y;
+  const rMax = a1 + a2;
+  const rMin = Math.abs(a1 - a2);
+  const r = Math.sqrt(r2);
+  if (r > rMax + 1e-9 || r < rMin - 1e-9) {
+    return {
+      reachable: false,
+      reason: r > rMax
+        ? `target distance ${fmt(r)} exceeds max reach ${fmt(rMax)}`
+        : `target distance ${fmt(r)} is inside dead zone (min reach ${fmt(rMin)})`,
+      r, rMax, rMin
+    };
+  }
+  const cos_t2 = (r2 - a1 * a1 - a2 * a2) / (2 * a1 * a2);
+  const c2 = Math.max(-1, Math.min(1, cos_t2));
+  const s2_pos = Math.sqrt(Math.max(0, 1 - c2 * c2));
+  const s2_neg = -s2_pos;
+  const t2a = Math.atan2(s2_pos, c2);
+  const t2b = Math.atan2(s2_neg, c2);
+  const k1a = a1 + a2 * Math.cos(t2a), k2a = a2 * Math.sin(t2a);
+  const k1b = a1 + a2 * Math.cos(t2b), k2b = a2 * Math.sin(t2b);
+  const phiTarget = Math.atan2(y, x);
+  const t1a = phiTarget - Math.atan2(k2a, k1a);
+  const t1b = phiTarget - Math.atan2(k2b, k1b);
+  return {
+    reachable: true, r, rMax, rMin, cos_t2, c2_clamped: c2,
+    t1a_deg: rad2deg(t1a), t2a_deg: rad2deg(t2a),
+    t1b_deg: rad2deg(t1b), t2b_deg: rad2deg(t2b),
+    phi_target: phiTarget,
+    offset_a: Math.atan2(k2a, k1a),
+    offset_b: Math.atan2(k2b, k1b),
+    s2_pos, s2_neg, k1a, k2a, k1b, k2b
+  };
+}
+
+// ========== THREE.JS SCENE ==========
+let scene, camera, renderer;
+let link1Group, link2Group, joint2Mesh, eeMesh;
+let targetMarker;
+let link1Mesh = null, link2Mesh = null;
+let robotPost = null;   // vertical column connecting base plate to arm joint
+const ROBOT_Y = 0.22;
+
+// Work volume objects
+let wvGroup = null;
+let wvVisible = false;
+
+function planarToWorld(x, y) { return [x, ROBOT_Y, -y]; }
+
+function initThree() {
+  const canvas = document.getElementById('canvas');
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+
+  scene = new THREE.Scene();
+  scene.background = null;
+  scene.fog = new THREE.Fog(0xECECEA, 16, 34);
+
+  camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
+  camera.position.set(5, 4.5, 6);
+  camera.lookAt(0, 0.5, 0);
+
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+  const key = new THREE.DirectionalLight(0xffffff, 1.1);
+  key.position.set(6, 9, 5);
+  key.castShadow = true;
+  key.shadow.camera.left = -8; key.shadow.camera.right = 8;
+  key.shadow.camera.top = 8; key.shadow.camera.bottom = -8;
+  key.shadow.mapSize.width = 1024; key.shadow.mapSize.height = 1024;
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0xE87722, 0.3);
+  fill.position.set(-4, 2, -3);
+  scene.add(fill);
+
+  const grid = new THREE.GridHelper(14, 28, 0xB8B8B6, 0xD8D8D6);
+  grid.material.transparent = true;
+  grid.material.opacity = 0.7;
+  scene.add(grid);
+
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(14, 14),
+    new THREE.ShadowMaterial({ opacity: 0.4 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  const axL = 2.0;
+  scene.add(makeAxis([0,0.01,0], [axL,0.01,0], 0xff5572, 3));
+  scene.add(makeAxis([0,0.01,0], [0,0.01,-axL], 0x5eff8c, 3));
+  scene.add(makeAxis([0,0.01,0], [0,axL,0], 0x5aa8ff, 3));
+
+  // Base plate (always on ground)
+  const basePlate = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35, 0.45, 0.15, 32),
+    new THREE.MeshStandardMaterial({ color: 0x3e5370, metalness: 0.6, roughness: 0.4 })
+  );
+  basePlate.position.y = 0.075;
+  basePlate.castShadow = true; basePlate.receiveShadow = true;
+  scene.add(basePlate);
+
+  // ── Robot skeleton (groups only — geometry built in rebuildLinks) ──
+  // link1Group: rotates by θ₁ about world-Y; positioned at ROBOT_Y + d1
+  link1Group = new THREE.Group();
+  link1Group.position.y = ROBOT_Y;
+  scene.add(link1Group);
+
+  // link2Group: child of link1Group, positioned at end of link-1 arm (a1 along X)
+  // then offset by d2 along the local Z (which becomes Y after alpha1 rotation)
+  link2Group = new THREE.Group();
+  link1Group.add(link2Group);
+
+  // eeMesh (Group): child of link2Group, at end of link-2 arm
+  eeMesh = new THREE.Group();
+  link2Group.add(eeMesh);
+
+  // EE visual: collar + cone (built once, repositioned in rebuildLinks)
+  const eeCollar = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.11, 0.11, 0.06, 20),
+    new THREE.MeshStandardMaterial({ color: 0xE87722, metalness: 0.7, roughness: 0.25,
+      emissive: 0x331100, emissiveIntensity: 0.7 })
+  );
+  eeCollar.rotation.z = Math.PI / 2;
+  eeCollar.castShadow = true;
+  eeMesh.add(eeCollar);
+  const eeCone = new THREE.Mesh(
+    new THREE.ConeGeometry(0.13, 0.34, 20, 1, true),
+    new THREE.MeshStandardMaterial({ color: 0xffa33c, metalness: 0.5, roughness: 0.35,
+      emissive: 0x553311, emissiveIntensity: 0.7, side: THREE.FrontSide })
+  );
+  eeCone.rotation.z = -Math.PI / 2;
+  eeCone.position.x = 0.17;
+  eeCone.castShadow = true;
+  eeMesh.add(eeCone);
+  const eeTip = new THREE.Mesh(
+    new THREE.CircleGeometry(0.02, 12),
+    new THREE.MeshStandardMaterial({ color: 0xffcc44, metalness: 0.8, roughness: 0.2 })
+  );
+  eeTip.rotation.y = Math.PI / 2;
+  eeTip.position.x = 0.34;
+  eeMesh.add(eeTip);
+
+  targetMarker = new THREE.Mesh(
+    new THREE.RingGeometry(0.18, 0.24, 32),
+    new THREE.MeshBasicMaterial({
+      color: 0xff5fa0, side: THREE.DoubleSide,
+      transparent: true, opacity: 1.0
+    })
+  );
+  targetMarker.rotation.x = -Math.PI / 2;
+  targetMarker.visible = false;
+  scene.add(targetMarker);
+
+  const crossMat = new THREE.LineBasicMaterial({ color: 0xff5fa0, linewidth: 2 });
+  const crossGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-0.12, 0, 0), new THREE.Vector3(0.12, 0, 0),
+    new THREE.Vector3(0, 0, -0.12), new THREE.Vector3(0, 0, 0.12)
+  ]);
+  targetMarker.add(new THREE.LineSegments(crossGeo, crossMat));
+
+  setupCameraControls(canvas);
+
+  window.addEventListener('resize', () => {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (w > 0 && h > 0) {
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+  });
+
+  animate();
+}
+
+function makeAxis(start, end, color, width = 2) {
+  const geo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(...start), new THREE.Vector3(...end)
+  ]);
+  return new THREE.Line(geo, new THREE.LineBasicMaterial({ color, linewidth: width }));
+}
+
+function setupCameraControls(canvas) {
+  const target = new THREE.Vector3(0, 0.5, 0);
+  const offset = new THREE.Vector3().subVectors(camera.position, target);
+  let radius = offset.length();
+  let phi = Math.atan2(offset.z, offset.x);
+  let theta = Math.acos(offset.y / radius);
+
+  let dragging = false;
+  let mode = 'orbit';
+  let sx = 0, sy = 0;
+
+  const updateCamera = () => {
+    camera.position.x = target.x + radius * Math.sin(theta) * Math.cos(phi);
+    camera.position.z = target.z + radius * Math.sin(theta) * Math.sin(phi);
+    camera.position.y = target.y + radius * Math.cos(theta);
+    camera.lookAt(target);
+  };
+
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+  canvas.addEventListener('mousedown', e => {
+    dragging = true;
+    sx = e.clientX; sy = e.clientY;
+    if (e.button === 2 || e.button === 1 || (e.button === 0 && e.shiftKey)) {
+      mode = 'pan';
+    } else {
+      mode = 'orbit';
+    }
+  });
+  window.addEventListener('mouseup', () => { dragging = false; });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    sx = e.clientX; sy = e.clientY;
+    if (mode === 'orbit') {
+      phi -= dx * 0.006;
+      theta = Math.max(0.08, Math.min(Math.PI - 0.08, theta - dy * 0.006));
+    } else {
+      const forward = new THREE.Vector3().subVectors(target, camera.position).normalize();
+      const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+      const upVec = new THREE.Vector3().crossVectors(right, forward).normalize();
+      const panScale = radius * 0.0018;
+      target.addScaledVector(right, -dx * panScale);
+      target.addScaledVector(upVec, dy * panScale);
+    }
+    updateCamera();
+  });
+
+  let lastTouches = null;
+  canvas.addEventListener('touchstart', e => {
+    lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+  }, { passive: true });
+  canvas.addEventListener('touchmove', e => {
+    if (!lastTouches) return;
+    const touches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+    if (touches.length === 1 && lastTouches.length === 1) {
+      const dx = touches[0].x - lastTouches[0].x;
+      const dy = touches[0].y - lastTouches[0].y;
+      phi -= dx * 0.006;
+      theta = Math.max(0.08, Math.min(Math.PI - 0.08, theta - dy * 0.006));
+      updateCamera();
+    } else if (touches.length === 2 && lastTouches.length === 2) {
+      const d0 = Math.hypot(lastTouches[0].x - lastTouches[1].x, lastTouches[0].y - lastTouches[1].y);
+      const d1 = Math.hypot(touches[0].x - touches[1].x, touches[0].y - touches[1].y);
+      radius = Math.max(2, Math.min(20, radius * (d0 / d1)));
+      const mx0 = (lastTouches[0].x + lastTouches[1].x) / 2;
+      const my0 = (lastTouches[0].y + lastTouches[1].y) / 2;
+      const mx1 = (touches[0].x + touches[1].x) / 2;
+      const my1 = (touches[0].y + touches[1].y) / 2;
+      const forward = new THREE.Vector3().subVectors(target, camera.position).normalize();
+      const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+      const upVec = new THREE.Vector3().crossVectors(right, forward).normalize();
+      const panScale = radius * 0.0018;
+      target.addScaledVector(right, -(mx1 - mx0) * panScale);
+      target.addScaledVector(upVec, (my1 - my0) * panScale);
+      updateCamera();
+    }
+    lastTouches = touches;
+  }, { passive: true });
+  canvas.addEventListener('touchend', () => { lastTouches = null; });
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    radius = Math.max(2, Math.min(20, radius + e.deltaY * 0.01));
+    updateCamera();
+  }, { passive: false });
+
+  updateCamera();
+}
+
+function rebuildLinks() {
+  /* ====================================================================
+     Full DH-correct 3D rebuild.
+
+     DH convention reminder (standard):
+       Trans_z(d) → Rot_z(θ) → Trans_x(a) → Rot_x(α)
+
+     In our world-space mapping:
+       joint z-axis  = world +Y  (vertical)
+       joint x-axis  = world +X  (arm extends along +X)
+       α  rotates the NEXT frame's z-axis around the current x-axis
+
+     So for each link i:
+       • d_i  : riser tube going UP  (along world Y from joint i)
+       • a_i  : horizontal arm tube  (along local X after θ_i rotation)
+       • α_i  : tilts the next joint's orientation (X-rotation on link2Group)
+       • d_2  : riser going along the NEW z (after α_1 tilt) = along link2Group's Y
+     ==================================================================== */
+
+  const JMAT = new THREE.MeshStandardMaterial({ color: 0xE87722, metalness: 0.7, roughness: 0.25, emissive: 0x331100, emissiveIntensity: 0.7 });
+  const L1MAT = new THREE.MeshStandardMaterial({ color: 0x4a6688, metalness: 0.5, roughness: 0.35 });
+  const L2MAT = new THREE.MeshStandardMaterial({ color: 0x5a7799, metalness: 0.5, roughness: 0.35 });
+  const RMAT  = new THREE.MeshStandardMaterial({ color: 0x2a3a52, metalness: 0.7, roughness: 0.35 });
+  const TUBE_R = 0.09;   // link tube radius
+  const JRAD   = 0.17;   // joint cylinder radius
+  const JLEN   = 0.22;   // joint cylinder length
+
+  // ── Helper: dispose all geometry/material children from a group ──
+  function clearGroup(g) {
+    while (g.children.length > 0) {
+      const c = g.children[0];
+      if (c.geometry) c.geometry.dispose();
+      // Don't dispose shared materials
+      g.remove(c);
+    }
+  }
+
+  const d1  = state.d1,  d2  = state.d2;
+  const a1  = Math.max(0.01, state.a1);
+  const a2  = Math.max(0.01, state.a2);
+  const al1 = deg2rad(state.alpha1);
+  const al2 = deg2rad(state.alpha2);
+
+  // ─────────────────────────────────────────────
+  // BASE POST:  column from floor plate up to joint 1 (includes d1)
+  // ─────────────────────────────────────────────
+  const baseTopY  = 0.15;                   // top of base plate in world Y
+  const joint1Y   = ROBOT_Y + d1;           // where joint-1 sits in world Y
+  link1Group.position.y = joint1Y;
+
+  if (robotPost) { scene.remove(robotPost); robotPost.geometry.dispose(); }
+  const postH = Math.max(0.02, joint1Y - baseTopY);
+  robotPost = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.12, postH, 16), RMAT.clone());
+  robotPost.position.y = baseTopY + postH / 2;
+  robotPost.castShadow = true;
+  scene.add(robotPost);
+
+  // ─────────────────────────────────────────────
+  // LINK 1 GROUP  (rotates about world Y by θ₁)
+  // Inside link1Group, local X = arm direction, local Y = up
+  // ─────────────────────────────────────────────
+  clearGroup(link1Group);
+
+  // Joint 1 cylinder — axis along world Y (i.e. local Y), shown as a short upright drum
+  const j1 = new THREE.Mesh(new THREE.CylinderGeometry(JRAD, JRAD, JLEN, 24), JMAT.clone());
+  j1.castShadow = true;
+  link1Group.add(j1);
+
+  // Link-1 horizontal arm tube: runs along local +X for length a1
+  link1Mesh = new THREE.Mesh(new THREE.CylinderGeometry(TUBE_R, TUBE_R, a1, 16), L1MAT.clone());
+  link1Mesh.rotation.z = Math.PI / 2;          // stand cylinder on its side → along X
+  link1Mesh.position.set(a1 / 2, 0, 0);
+  link1Mesh.castShadow = true;
+  link1Group.add(link1Mesh);
+
+  // ─────────────────────────────────────────────
+  // LINK 2 GROUP  (child of link1Group)
+  // Positioned at end of link-1 arm.
+  // α₁ twists the frame: Rot_x(α₁) on this group.
+  // d₂ is a riser along the NEW local Z (which is link2Group's +Y after α₁ rotation).
+  // ─────────────────────────────────────────────
+
+  // First: re-parent link2Group cleanly (it was cleared above with clearGroup on link1Group)
+  // link2Group is already a child of link1Group from initThree — re-add it
+  link1Group.add(link2Group);
+  clearGroup(link2Group);
+
+  // Position at end of arm-1, apply α₁ twist
+  link2Group.position.set(a1, 0, 0);
+  link2Group.rotation.set(al1, 0, 0);   // α₁: Rot_x tilts the z-axis of frame 2
+
+  // d₂ riser: tube along link2Group's local Y (= the new z-axis after α₁ tilt)
+  // Only draw if d2 is meaningful
+  if (Math.abs(d2) > 0.02) {
+    const d2Riser = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.09, Math.abs(d2), 14), RMAT.clone());
+    d2Riser.position.set(0, d2 / 2, 0);   // along local Y
+    d2Riser.castShadow = true;
+    link2Group.add(d2Riser);
+  }
+
+  // Joint 2 cylinder — axis along link2Group's local Y (the z-axis of frame 2)
+  // Positioned at end of d2 riser
+  joint2Mesh = new THREE.Mesh(new THREE.CylinderGeometry(JRAD, JRAD, JLEN, 24), JMAT.clone());
+  joint2Mesh.position.set(0, d2, 0);     // top of the d2 riser
+  joint2Mesh.castShadow = true;
+  link2Group.add(joint2Mesh);
+
+  // Link-2 horizontal arm tube: runs along link2Group's local +X (after α₁ twist)
+  // but link2Group's rotation.y (θ₂) handles the sweep — the arm still goes along +X
+  link2Mesh = new THREE.Mesh(new THREE.CylinderGeometry(TUBE_R * 0.9, TUBE_R * 0.9, a2, 16), L2MAT.clone());
+  link2Mesh.rotation.z = Math.PI / 2;
+  link2Mesh.position.set(a2 / 2, d2, 0);   // starts at joint-2 position
+  link2Mesh.castShadow = true;
+  link2Group.add(link2Mesh);
+
+  // ─────────────────────────────────────────────
+  // EE GROUP — at end of link-2 arm
+  // α₂ would twist the end-effector frame
+  // ─────────────────────────────────────────────
+  link2Group.add(eeMesh);
+  eeMesh.position.set(a2, d2, 0);
+  eeMesh.rotation.set(al2, 0, 0);
+
+  buildWorkspaceViz();
+}
+
+function applyJoints() {
+  // theta1 rotates link1 about world Y (+theta → +X toward −Z, our axis mapping)
+  link1Group.rotation.y = deg2rad(state.theta1);
+  // theta2 rotates link2 about link2Group's local Y (already twisted by alpha1)
+  link2Group.rotation.y = deg2rad(state.theta2);
+}
+
+// ========================================================================
+// WORK VOLUME 3D VISUALIZATION
+// ========================================================================
+function buildWorkspaceViz() {
+  // ── Dispose previous group ──
+  if (wvGroup) {
+    while (wvGroup.children.length) {
+      const c = wvGroup.children[0];
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) {
+        if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+        else c.material.dispose();
+      }
+      wvGroup.remove(c);
+    }
+    scene.remove(wvGroup);
+  }
+
+  const a1   = Math.max(0.01, state.a1);
+  const a2   = Math.max(0.01, state.a2);
+  const rMax = a1 + a2;
+  const rMin = Math.abs(a1 - a2);
+  const SEGS = 128;
+
+  // ── The workspace group is positioned at the arm base world position ──
+  // link1Group sits at (0, ROBOT_Y + d1, 0) and is rotated by theta1 around Y.
+  // The workspace annulus lives in the arm's sweep PLANE.
+  // For the pure planar case (alpha1=0), the sweep plane is horizontal (XZ world).
+  // When alpha1 != 0 the arm tilts — the annulus tilts with it.
+  // We achieve this by making wvGroup a child of a helper that replicates
+  // the base transform (position + alpha tilt) but NOT theta1 (which just
+  // rotates the arm within the annulus — the annulus is symmetric so it doesn't matter).
+
+  wvGroup = new THREE.Group();
+  const baseY = link1Group ? link1Group.position.y : ROBOT_Y;
+  wvGroup.position.set(0, baseY, 0);
+  wvGroup.visible = wvVisible;
+  scene.add(wvGroup);
+
+  function lineMat(col, opacity) {
+    const m = new THREE.LineBasicMaterial({ color: col, linewidth: 2 });
+    if (opacity < 1) { m.transparent = true; m.opacity = opacity; }
+    return m;
+  }
+  function meshMat(col, opacity) {
+    return new THREE.MeshBasicMaterial({
+      color: col, transparent: true, opacity,
+      side: THREE.DoubleSide, depthWrite: false
+    });
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // TRUE TOROIDAL WORK VOLUME
+  // For each azimuth φ (θ₁ swept 0→2π) and elbow angle t2 (θ₂ swept 0→2π):
+  //   joint1 end  = a1 * (cosφ, 0, -sinφ)
+  //   After α₁ twist, the elbow circle plane is tilted:
+  //     forward dir  = (cosφ,      0,     -sinφ)
+  //     twist-up dir = (sinφ·sinα, cosα,   cosφ·sinα)
+  //   end-effector = joint1 + a2*(cos(t2)*forward + sin(t2)*twistUp)
+  // ════════════════════════════════════════════════════════════════
+  const PHI_SEGS = 72;
+  const T2_SEGS  = 48;
+  const al1 = deg2rad(state.alpha1);
+  const cosA = Math.cos(al1), sinA = Math.sin(al1);
+
+  // ── End-effector position ──────────────────────────────────────────────
+  // Exact match of the Three.js scene hierarchy:
+  //   link1Group.rotation.y = θ₁          (rotates about world Y)
+  //   link2Group.position    = (a1, d2, 0) in link1Group local space
+  //   link2Group.rotation.x  = α₁          (tilts z-axis of frame2)
+  //   link2Group.rotation.y  = θ₂          (sweeps link2 about tilted Z2)
+  //   link2Mesh goes along local +X for length a2
+  //
+  // In world space, end-effector =
+  //   R_Y(θ₁) * [ (a1,0,0) + R_X(α₁) * R_Y(θ₂) * (a2,0,0) ]
+  //
+  // R_Y(θ₁): (x,y,z) → (x·cθ₁+z·sθ₁, y, -x·sθ₁+z·cθ₁)  [Three.js Y-up convention]
+  // R_X(α₁): (x,y,z) → (x, y·cα-z·sα, y·sα+z·cα)
+  // R_Y(θ₂): (a2,0,0) → (a2·cθ₂, 0, -a2·sθ₂)  [Three.js: +Y rotation goes toward -Z]
+  //
+  // R_X(α₁) * R_Y(θ₂) * (a2,0,0):
+  //   after R_Y(θ₂): (a2·cθ₂, 0, -a2·sθ₂)
+  //   after R_X(α₁): (a2·cθ₂,  a2·sθ₂·sα,  -a2·sθ₂·cα)  -- wait d2 offset too
+  //   (ignoring d2 for reach envelope; add d2 offset separately)
+  //
+  // Full point (d2 along link2Group local Y = R_X(α₁)*(0,1,0) = (0,cα,sα)):
+  //   joint2_world = R_Y(θ₁) * (a1 + 0, d2·cα, d2·sα)   -- simplified when d2 offset
+  //   ee_local2 = (a2·cθ₂, a2·sθ₂·sα·... )  -- let's just compute it step by step
+
+  function eePos(phi, t2) {
+    const c1 = Math.cos(phi), s1 = Math.sin(phi);
+    const c2 = Math.cos(t2),  s2 = Math.sin(t2);
+    // d2 offset along link2Group local Y = R_X(α₁)·(0,1,0) = (0, cosA, sinA)
+    // In link1Group local space: joint2 base = (a1, d2*cosA, d2*sinA)
+    const d2 = state.d2 || 0;
+    const lx = a1 + 0;
+    const ly = d2 * cosA;
+    const lz = d2 * sinA;
+    // link2 tip in link2Group local space (before link2Group's rotation.y=t2):
+    // link2 goes along local +X for a2, so tip = (a2,0,0)
+    // Rotate by R_Y(t2): (a2,0,0) → (a2*c2, 0, -a2*s2)
+    // Then apply R_X(α₁):
+    //   (a2*c2, 0, -a2*s2) → (a2*c2, a2*s2*sinA, -a2*s2*cosA)
+    const ex = a2*c2;
+    const ey = a2*s2*sinA;
+    const ez = -a2*s2*cosA;
+    // In link1Group local space: ee = joint2_base + ee_in_link2
+    const lx2 = lx + ex;
+    const ly2 = ly + ey;
+    const lz2 = lz + ez;
+    // Apply R_Y(θ₁) to get world space (Three.js Y-rotation: x→x*c1+z*s1, z→-x*s1+z*c1)
+    return new THREE.Vector3(
+      lx2*c1 + lz2*s1,
+      ly2,
+      -lx2*s1 + lz2*c1
+    );
+  }
+
+  // ── Surface mesh ──
+  const positions = [];
+  const uvs = [];
+  for (let i = 0; i <= PHI_SEGS; i++) {
+    const phi = (i / PHI_SEGS) * Math.PI * 2;
+    for (let j = 0; j <= T2_SEGS; j++) {
+      const t2 = (j / T2_SEGS) * Math.PI * 2;
+      const p = eePos(phi, t2);
+      positions.push(p.x, p.y, p.z);
+    }
+  }
+  const idx = [];
+  for (let i = 0; i < PHI_SEGS; i++) {
+    for (let j = 0; j < T2_SEGS; j++) {
+      const a = i*(T2_SEGS+1)+j, b = a+1;
+      const c = (i+1)*(T2_SEGS+1)+j, d = c+1;
+      idx.push(a,b,d, a,d,c);
+    }
+  }
+  const torusGeo = new THREE.BufferGeometry();
+  torusGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  torusGeo.setIndex(idx);
+  torusGeo.computeVertexNormals();
+  wvGroup.add(new THREE.Mesh(torusGeo, meshMat(0xE87722, 0.09)));
+
+  // ── Latitude wireframe (constant t2 — circles of same elbow angle) ──
+  for (let li = 0; li <= 8; li++) {
+    const t2 = (li / 8) * Math.PI * 2;
+    const pts = [];
+    for (let i = 0; i <= PHI_SEGS; i++)
+      pts.push(eePos((i/PHI_SEGS)*Math.PI*2, t2));
+    wvGroup.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts),
+      lineMat(0xE87722, li===0||li===4 ? 0.7 : 0.25)
+    ));
+  }
+
+  // ── Longitude wireframe (constant φ — elbow sweep circles) ──
+  for (let li = 0; li < 24; li++) {
+    const phi = (li / 24) * Math.PI * 2;
+    const pts = [];
+    for (let j = 0; j <= T2_SEGS; j++)
+      pts.push(eePos(phi, (j/T2_SEGS)*Math.PI*2));
+    wvGroup.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts),
+      lineMat(0xE87722, 0.18)
+    ));
+  }
+
+  // ── Equator ring (t2=0, arm fully in horizontal plane) ──
+  { const pts = [];
+    for (let i = 0; i <= 128; i++) pts.push(eePos((i/128)*Math.PI*2, 0));
+    wvGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat(0xE87722, 0.95)));
+  }
+  // ── Bottom equator (t2=π) ──
+  { const pts = [];
+    for (let i = 0; i <= 128; i++) pts.push(eePos((i/128)*Math.PI*2, Math.PI));
+    wvGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat(0xE87722, 0.45)));
+  }
+
+  // ── Inner dead-zone ring (when rMin > 0) ──
+  if (rMin > 0.04) {
+    // The inner boundary is the torus where a2=rMin (arm fully folded/extended to rMin)
+    // For the equator it's just a circle at rMin
+    const pts = [];
+    for (let i = 0; i <= 128; i++) {
+      const phi = (i/128)*Math.PI*2;
+      pts.push(new THREE.Vector3(Math.cos(phi)*rMin, 0, -Math.sin(phi)*rMin));
+    }
+    wvGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat(0xff5757, 0.9)));
+  }
+
+  // ── Dimension arrows ──
+  const DY = 0.06;
+  wvGroup.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,DY,0), new THREE.Vector3(rMax,DY,0)]),
+    lineMat(0xffa33c, 1.0)
+  ));
+  [[0,0xffa33c],[rMax,0xffa33c]].forEach(([x,col]) => {
+    wvGroup.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x,DY-0.04,0),new THREE.Vector3(x,DY+0.04,0)]),
+      lineMat(col,1.0)
+    ));
+  });
+  if (rMin > 0.05) {
+    wvGroup.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,DY,0),new THREE.Vector3(-rMin,DY,0)]),
+      lineMat(0xff5757,1.0)
+    ));
+    [0,-rMin].forEach(x => {
+      wvGroup.add(new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x,DY-0.04,0),new THREE.Vector3(x,DY+0.04,0)]),
+        lineMat(0xff5757,1.0)
+      ));
+    });
+  }
+
+}
+
+function toggleRightPanel() {
+  const app = document.getElementById('app');
+  const btn = document.getElementById('rp-collapse-btn');
+  const collapsed = app.classList.toggle('right-collapsed');
+  btn.innerHTML = collapsed ? '&#9664; Show Panel' : '&#9654; Hide Panel';
+  btn.style.background = collapsed ? 'rgba(232,119,34,0.2)' : 'rgba(0,229,204,0.12)';
+  // Fire renderer resize at multiple points during the 0.28s CSS transition
+  // so the 3D viewport fills smoothly rather than snapping at the end
+  const steps = [50, 100, 150, 200, 250, 310];
+  steps.forEach(ms => setTimeout(() => {
+    if (!renderer) return;
+    const vp = document.querySelector('.viewport');
+    const w = vp.clientWidth, h = vp.clientHeight;
+    if (w > 0 && h > 0) {
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+  }, ms));
+}
+
+function toggleWorkspaceViz() {
+  wvVisible = !wvVisible;
+  if (wvGroup) wvGroup.visible = wvVisible;
+  const btn = document.getElementById('wv-toggle-btn');
+  btn.textContent = wvVisible ? '\u25CE Hide Workspace' : '\u25CE Show Workspace';
+  btn.style.background = wvVisible ? 'rgba(0,255,170,0.28)' : 'rgba(0,255,170,0.15)';
+  btn.style.boxShadow = wvVisible ? '0 0 14px rgba(0,255,170,0.35)' : 'none';
+}
+
+// ========================================================================
+// WORK VOLUME PANEL (right-panel calculations)
+// ========================================================================
+function renderWorkVolume() {
+  const a1 = state.a1, a2 = state.a2;
+  const rMax = a1 + a2;
+  const rMin = Math.abs(a1 - a2);
+  const annulusArea = Math.PI * (rMax * rMax - rMin * rMin);
+  const diskArea    = Math.PI * rMax * rMax;
+  const pctReach    = annulusArea / diskArea * 100;
+  const dexterity   = 1 - rMin / (rMax || 1);
+
+  // Centroid of annulus (from Pappus): R̄ = 2(rMax³ - rMin³) / (3(rMax² - rMin²))
+  const denom = rMax * rMax - rMin * rMin;
+  const Rbar  = denom > 1e-9
+    ? (2 / 3) * (rMax * rMax * rMax - rMin * rMin * rMin) / denom
+    : rMax * 2 / 3;
+  const vol3d = 2 * Math.PI * Rbar * annulusArea;
+
+  // Current EE position
+  const fk  = forwardKinematics();
+  const eeX = fk.T[0][3], eeY = fk.T[1][3];
+  const eeR = Math.sqrt(eeX * eeX + eeY * eeY);
+  const inside = eeR >= rMin - 1e-5 && eeR <= rMax + 1e-5;
+
+  const dexLabel = dexterity > 0.95
+    ? '&#10003; Equal links — maximum dexterity, no dead zone'
+    : dexterity > 0.7
+      ? '&#9711; Good dexterity — small dead zone'
+      : '&#9651; Unequal links — significant dead zone near base';
+
+  const statusColor = inside ? 'var(--accent)' : 'var(--red)';
+  const statusMark  = inside ? '&#10003;' : '&#10007;';
+  const statusText  = inside ? 'EE is inside the workspace' : 'EE is outside the workspace';
+
+  document.getElementById('wv-content').innerHTML = `
+    <div class="calc-step">
+      <div class="step-header">
+        <span class="step-num">01</span>
+        <span class="step-title">Reachable Workspace Boundaries</span>
+      </div>
+      <div class="step-desc">
+        The end-effector can reach every point whose distance from the base
+        satisfies: <code>r_min ≤ r ≤ r_max</code>
+      </div>
+      <div class="matrix"><pre>r_min = |a₁ − a₂| = |${a1.toFixed(3)} − ${a2.toFixed(3)}|
+       = ${rMin.toFixed(4)} m
+
+r_max =  a₁ + a₂  =  ${a1.toFixed(3)} + ${a2.toFixed(3)}
+       = ${rMax.toFixed(4)} m</pre></div>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-header">
+        <span class="step-num">02</span>
+        <span class="step-title">2D Work Envelope Area</span>
+      </div>
+      <div class="step-desc">
+        The reachable region is an <b>annulus</b>. Its area is:
+      </div>
+      <div class="matrix"><pre>A = π · (r_max² − r_min²)
+  = π · (${(rMax*rMax).toFixed(4)} − ${(rMin*rMin).toFixed(4)})
+  = <b>${annulusArea.toFixed(4)} m²</b>
+
+Coverage = A / (π · r_max²)
+         = ${annulusArea.toFixed(4)} / ${diskArea.toFixed(4)}
+         = <b>${pctReach.toFixed(1)} %</b> of bounding disk</pre></div>
+      <div class="result-box">
+        <div class="label">2D work envelope</div>
+        <div class="val"><b>A =</b> ${annulusArea.toFixed(4)} m²</div>
+        <div class="val"><b>Coverage =</b> ${pctReach.toFixed(1)} % of bounding disk</div>
+      </div>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-header">
+        <span class="step-num">03</span>
+        <span class="step-title">3D Work Volume (360° Rotation)</span>
+      </div>
+      <div class="step-desc">
+        If the base rotates 360°, the annulus sweeps a <b>toroidal shell</b>.
+        By Pappus's centroid theorem  <code>V = 2π · R̄ · A</code>:
+      </div>
+      <div class="matrix"><pre>R̄ = 2(r_max³ − r_min³) / 3(r_max² − r_min²)
+  = ${Rbar.toFixed(4)} m   (centroid radius)
+
+V = 2π · ${Rbar.toFixed(4)} · ${annulusArea.toFixed(4)}
+  = <b>${vol3d.toFixed(4)} m³</b></pre></div>
+      <div class="result-box">
+        <div class="label">3D work volume</div>
+        <div class="val"><b>V =</b> ${vol3d.toFixed(4)} m³</div>
+      </div>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-header">
+        <span class="step-num">04</span>
+        <span class="step-title">Dexterity Index</span>
+      </div>
+      <div class="step-desc">
+        Measures how uniformly the arm can reach points near the base.
+        D = 1 when a₁ = a₂ (no dead zone), D → 0 for very unequal links:
+      </div>
+      <div class="matrix"><pre>D = 1 − (r_min / r_max)
+  = 1 − ${rMin.toFixed(4)} / ${rMax.toFixed(4)}
+  = <b>${dexterity.toFixed(4)}</b>   (0 = poor · 1 = ideal)</pre></div>
+      <div class="result-box" style="border-color:${dexterity > 0.7 ? 'var(--accent-deep)' : 'var(--orange-deep)'}">
+        <div class="label">dexterity</div>
+        <div class="val"><b>D =</b> ${dexterity.toFixed(4)}</div>
+        <div class="val" style="font-size:12px;color:var(--text-dim);margin-top:6px">${dexLabel}</div>
+      </div>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-header">
+        <span class="step-num">05</span>
+        <span class="step-title">Current EE Position Check</span>
+      </div>
+      <div class="matrix"><pre>EE position : (${eeX.toFixed(4)},  ${eeY.toFixed(4)}) m
+EE radius   : r = ${eeR.toFixed(4)} m
+r_min = ${rMin.toFixed(4)} m   r_max = ${rMax.toFixed(4)} m
+<b style="color:${statusColor}">${statusMark} ${statusText}</b></pre></div>
+    </div>
+  `;
+}
+
+function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
+
+// ========================================================================
+// FK panel
+// ========================================================================
+function renderFK() {
+  const { T1, T2, T, phi } = forwardKinematics();
+  document.getElementById('ee-x').textContent = fmt(T[0][3]);
+  document.getElementById('ee-y').textContent = fmt(T[1][3]);
+  document.getElementById('ee-z').textContent = fmt(T[2][3]);
+  document.getElementById('ee-phi').textContent = fmt(rad2deg(phi), 2) + '°';
+
+  const rMax = state.a1 + state.a2;
+  const rMin = Math.abs(state.a1 - state.a2);
+  document.getElementById('workspace-info').textContent =
+    `reach · min ${fmt(rMin, 2)} · max ${fmt(rMax, 2)}`;
+
+  const t1 = state.theta1, t2 = state.theta2;
+
+  document.getElementById('fk-content').innerHTML = `
+    <div class="calc-step">
+      <div class="step-header">
+        <span class="step-num">01</span>
+        <span class="step-title">DH Transformation — Link 1</span>
+      </div>
+      <div class="step-desc">
+        Link-1 row: <code>θ₁ = ${fmt(t1,1)}°</code>
+        <code>d₁ = ${fmt(state.d1,2)}</code>
+        <code>a₁ = ${fmt(state.a1,2)}</code>
+        <code>α₁ = ${fmt(state.alpha1,1)}°</code>
+      </div>
+      <div class="matrix-label">T⁰₁ =</div>
+      <div class="matrix"><pre>${formatMatrix(T1)}</pre></div>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-header">
+        <span class="step-num">02</span>
+        <span class="step-title">DH Transformation — Link 2</span>
+      </div>
+      <div class="step-desc">
+        Link-2 row: <code>θ₂ = ${fmt(t2,1)}°</code>
+        <code>d₂ = ${fmt(state.d2,2)}</code>
+        <code>a₂ = ${fmt(state.a2,2)}</code>
+        <code>α₂ = ${fmt(state.alpha2,1)}°</code>
+      </div>
+      <div class="matrix-label">T¹₂ =</div>
+      <div class="matrix"><pre>${formatMatrix(T2)}</pre></div>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-header">
+        <span class="step-num">03</span>
+        <span class="step-title">Compose</span>
+      </div>
+      <div class="step-desc"><code>T⁰₂ = T⁰₁ · T¹₂</code></div>
+      <div class="matrix-label">T⁰₂ =</div>
+      <div class="matrix"><pre>${formatMatrix(T)}</pre></div>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-header">
+        <span class="step-num">04</span>
+        <span class="step-title">Extract Pose</span>
+      </div>
+      <div class="step-desc">Position = last column of T⁰₂. Planar orientation φ = atan2(r₂₁, r₁₁).</div>
+      <div class="result-box">
+        <div class="label">end-effector pose</div>
+        <div class="val"><b>X =</b>${fmt(T[0][3])}</div>
+        <div class="val"><b>Y =</b>${fmt(T[1][3])}</div>
+        <div class="val"><b>Z =</b>${fmt(T[2][3])}</div>
+        <div class="val"><b>φ =</b>${fmt(rad2deg(phi), 2)}°</div>
+      </div>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-header">
+        <span class="step-num">05</span>
+        <span class="step-title">Closed-Form Verification</span>
+      </div>
+      <div class="step-desc">For α = 0, d = 0, the transform reduces to the planar 2R equations:</div>
+      <div class="matrix"><pre>x = a₁·cos(θ₁) + a₂·cos(θ₁+θ₂)
+  = ${fmt(state.a1)}·cos(${fmt(t1,1)}°) + ${fmt(state.a2)}·cos(${fmt(t1+t2,1)}°)
+  = ${fmt(state.a1 * Math.cos(deg2rad(t1)) + state.a2 * Math.cos(deg2rad(t1+t2)))}
+
+y = a₁·sin(θ₁) + a₂·sin(θ₁+θ₂)
+  = ${fmt(state.a1)}·sin(${fmt(t1,1)}°) + ${fmt(state.a2)}·sin(${fmt(t1+t2,1)}°)
+  = ${fmt(state.a1 * Math.sin(deg2rad(t1)) + state.a2 * Math.sin(deg2rad(t1+t2)))}</pre></div>
+    </div>
+  `;
+}
+
+// ========================================================================
+// IK panel
+// ========================================================================
+function renderIK(sol) {
+  const el = document.getElementById('ik-content');
+  if (!sol) {
+    el.innerHTML = `<div class="ik-status">click “solve ik” with a target to see step-by-step solution</div>`;
+    return;
+  }
+  if (!sol.reachable) {
+    el.innerHTML = `
+      <div class="ik-status err">✗ unreachable · ${sol.reason}</div>
+      <div class="calc-step">
+        <div class="step-header"><span class="step-num">!</span><span class="step-title">Workspace Check Failed</span></div>
+        <div class="step-desc">
+          Distance from base: <code>r = √(x² + y²) = ${fmt(sol.r)}</code><br>
+          Reach annulus: <code>[${fmt(sol.rMin)}, ${fmt(sol.rMax)}]</code>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const x = state.targetX, y = state.targetY;
+  const a1 = state.a1, a2 = state.a2;
+  const active = state.activeSolution;
+
+  el.innerHTML = `
+    <div class="ik-status ok">✓ reachable · two configurations found</div>
+
+    <div class="sol-grid">
+      <div class="sol-card ${active==='a'?'active':''}" data-sol="a">
+        <div class="name">◣ elbow-down</div>
+        <div class="vals">θ₁ = ${fmt(sol.t1a_deg, 2)}°<br>θ₂ = ${fmt(sol.t2a_deg, 2)}°</div>
+      </div>
+      <div class="sol-card ${active==='b'?'active':''}" data-sol="b">
+        <div class="name">◥ elbow-up</div>
+        <div class="vals">θ₁ = ${fmt(sol.t1b_deg, 2)}°<br>θ₂ = ${fmt(sol.t2b_deg, 2)}°</div>
+      </div>
+    </div>
+
+    <div class="calc-step" style="margin-top: 22px;">
+      <div class="step-header">
+        <span class="step-num">01</span>
+        <span class="step-title">Workspace Reachability</span>
+      </div>
+      <div class="step-desc">Check target against reach annulus <code>[|a₁−a₂|, a₁+a₂]</code>.</div>
+      <div class="matrix"><pre>r    = √(x² + y²) = √(${fmt(x*x)} + ${fmt(y*y)}) = ${fmt(sol.r)}
+rₘᵢₙ = |a₁ − a₂| = ${fmt(sol.rMin)}
+rₘₐₓ =  a₁ + a₂  = ${fmt(sol.rMax)}
+→ ${fmt(sol.rMin)} ≤ ${fmt(sol.r)} ≤ ${fmt(sol.rMax)}   ✓ in range</pre></div>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-header">
+        <span class="step-num">02</span>
+        <span class="step-title">Solve θ₂ (Law of Cosines)</span>
+      </div>
+      <div class="step-desc"><code>cos θ₂ = (x² + y² − a₁² − a₂²) / (2·a₁·a₂)</code></div>
+      <div class="matrix"><pre>cos θ₂ = (${fmt(x*x + y*y)} − ${fmt(a1*a1)} − ${fmt(a2*a2)}) / (2·${fmt(a1)}·${fmt(a2)})
+       = ${fmt(sol.cos_t2, 4)}
+
+sin θ₂ = ±√(1 − cos²θ₂) = ±${fmt(Math.sqrt(Math.max(0, 1 - sol.c2_clamped**2)), 4)}
+
+θ₂ = atan2(sin θ₂, cos θ₂)
+  elbow-down (+): ${fmt(sol.t2a_deg, 3)}°
+  elbow-up   (−): ${fmt(sol.t2b_deg, 3)}°</pre></div>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-header">
+        <span class="step-num">03</span>
+        <span class="step-title">Solve θ₁</span>
+      </div>
+      <div class="step-desc"><code>θ₁ = atan2(y, x) − atan2(a₂·sin θ₂, a₁ + a₂·cos θ₂)</code></div>
+      <div class="matrix"><pre>atan2(y, x) = atan2(${fmt(y)}, ${fmt(x)}) = ${fmt(rad2deg(sol.phi_target), 3)}°
+
+elbow-down:
+  offset = atan2(${fmt(sol.k2a)}, ${fmt(sol.k1a)}) = ${fmt(rad2deg(sol.offset_a), 3)}°
+  θ₁     = ${fmt(rad2deg(sol.phi_target), 3)}° − ${fmt(rad2deg(sol.offset_a), 3)}°
+         = ${fmt(sol.t1a_deg, 3)}°
+
+elbow-up:
+  offset = atan2(${fmt(sol.k2b)}, ${fmt(sol.k1b)}) = ${fmt(rad2deg(sol.offset_b), 3)}°
+  θ₁     = ${fmt(sol.t1b_deg, 3)}°</pre></div>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-header">
+        <span class="step-num">04</span>
+        <span class="step-title">Active Solution Applied</span>
+      </div>
+      <div class="result-box">
+        <div class="label">displayed · ${active==='a'?'elbow-down':'elbow-up'}</div>
+        <div class="val"><b>θ₁ =</b>${fmt(active==='a'?sol.t1a_deg:sol.t1b_deg, 3)}°</div>
+        <div class="val"><b>θ₂ =</b>${fmt(active==='a'?sol.t2a_deg:sol.t2b_deg, 3)}°</div>
+      </div>
+    </div>
+  `;
+
+  el.querySelectorAll('.sol-card').forEach(c => {
+    c.addEventListener('click', () => {
+      state.activeSolution = c.dataset.sol;
+      applyIKSolution();
+    });
+  });
+}
+
+function applyIKSolution() {
+  const s = state.ikSolution;
+  if (!s || !s.reachable) return;
+  const t1 = state.activeSolution === 'a' ? s.t1a_deg : s.t1b_deg;
+  const t2 = state.activeSolution === 'a' ? s.t2a_deg : s.t2b_deg;
+  state.theta1 = t1; state.theta2 = t2;
+  document.getElementById('theta1').value = fmt(t1, 2);
+  document.getElementById('theta2').value = fmt(t2, 2);
+  document.getElementById('j1-slider').value = t1;
+  document.getElementById('j2-slider').value = t2;
+  document.getElementById('j1-val').textContent = fmt(t1, 1) + '°';
+  document.getElementById('j2-val').textContent = fmt(t2, 1) + '°';
+  refresh();
+  renderIK(state.ikSolution);
+}
+
+// ========================================================================
+// SVG ILLUSTRATIONS — tuned for projector readability
+// Colors pulled from CSS palette so everything is consistent
+// ========================================================================
+
+// palette used in SVG (must match --accent etc.)
+const COL = {
+  text: '#f5f8fc', dim: '#c4ccd8', faint: '#8a96a8',
+  accent: '#E87722', blue: '#4dc7ff', orange: '#ffa33c',
+  pink: '#ff5fa0', purple: '#c07cff', red: '#ff5757',
+  axisX: '#ff5572', axisY: '#5eff8c',
+};
+
+function svgDHFrame() {
+  return `
+  <svg viewBox="0 0 620 340" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="${COL.dim}"/>
+      </marker>
+      <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="${COL.accent}"/>
+      </marker>
+      <marker id="arrPurple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="${COL.purple}"/>
+      </marker>
+      <marker id="arrOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="${COL.orange}"/>
+      </marker>
+    </defs>
+    <!-- Frame i-1 -->
+    <g transform="translate(130, 250)">
+      <line x1="0" y1="0" x2="0" y2="-100" stroke="${COL.axisY}" stroke-width="2.5" marker-end="url(#arr1)"/>
+      <line x1="0" y1="0" x2="100" y2="0" stroke="${COL.axisX}" stroke-width="2.5" marker-end="url(#arr1)"/>
+      <circle cx="0" cy="0" r="5" fill="${COL.accent}" stroke="${COL.text}" stroke-width="1.5"/>
+      <text x="-22" y="-108" class="svg-label" fill="${COL.axisY}">z_{i-1}</text>
+      <text x="105" y="6" class="svg-label" fill="${COL.axisX}">x_{i-1}</text>
+      <text x="-28" y="24" class="svg-label svg-label-dim">O_{i-1}</text>
+    </g>
+    <!-- d translation (along z_{i-1}) -->
+    <line x1="130" y1="250" x2="130" y2="190" stroke="${COL.accent}" stroke-width="3" marker-end="url(#arrA)"/>
+    <text x="140" y="225" class="svg-label svg-label-accent">dᵢ</text>
+    <!-- a translation (along x_i) -->
+    <line x1="130" y1="190" x2="420" y2="190" stroke="${COL.accent}" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#arrA)"/>
+    <text x="260" y="182" class="svg-label svg-label-accent">aᵢ</text>
+    <!-- θ arc (rotation about z_{i-1}) -->
+    <path d="M 180 250 A 50 50 0 0 0 170 215" fill="none" stroke="${COL.purple}" stroke-width="2" marker-end="url(#arrPurple)"/>
+    <text x="186" y="232" class="svg-label" fill="${COL.purple}">θᵢ</text>
+    <!-- Frame i -->
+    <g transform="translate(420, 190)">
+      <line x1="0" y1="0" x2="0" y2="-80" stroke="${COL.axisY}" stroke-width="2.5" marker-end="url(#arr1)"/>
+      <line x1="0" y1="0" x2="90" y2="-28" stroke="${COL.axisX}" stroke-width="2.5" marker-end="url(#arr1)"/>
+      <circle cx="0" cy="0" r="5" fill="${COL.accent}" stroke="${COL.text}" stroke-width="1.5"/>
+      <text x="-14" y="-86" class="svg-label" fill="${COL.axisY}">zᵢ</text>
+      <text x="96" y="-24" class="svg-label" fill="${COL.axisX}">xᵢ</text>
+      <text x="-14" y="22" class="svg-label svg-label-dim">Oᵢ</text>
+    </g>
+    <!-- α twist arc (rotation about x_i) -->
+    <path d="M 460 170 A 22 22 0 0 0 452 148" fill="none" stroke="${COL.orange}" stroke-width="2" marker-end="url(#arrOrange)"/>
+    <text x="468" y="160" class="svg-label" fill="${COL.orange}">αᵢ</text>
+    <!-- Title -->
+    <text x="30" y="34" class="svg-label svg-label-accent" style="font-size:16px; font-weight:700">The four DH parameters</text>
+    <text x="30" y="58" class="svg-label svg-label-dim" style="font-size:13px">θᵢ — rotate about zᵢ₋₁ · dᵢ — slide along zᵢ₋₁</text>
+    <text x="30" y="78" class="svg-label svg-label-dim" style="font-size:13px">aᵢ — slide along xᵢ · αᵢ — rotate about xᵢ</text>
+  </svg>`;
+}
+
+function svgPlanarRobot(t1Deg, t2Deg, a1, a2, showAngles = true) {
+  const scale = 70;
+  const cx = 140, cy = 270;
+  const t1 = deg2rad(t1Deg), t2 = deg2rad(t2Deg);
+  const p1x = cx + a1 * scale * Math.cos(t1);
+  const p1y = cy - a1 * scale * Math.sin(t1);
+  const p2x = p1x + a2 * scale * Math.cos(t1 + t2);
+  const p2y = p1y - a2 * scale * Math.sin(t1 + t2);
+
+  const arc1r = 45;
+  const arc1End = { x: cx + arc1r * Math.cos(t1), y: cy - arc1r * Math.sin(t1) };
+  const arc2r = 32;
+  const arc2Start = { x: p1x + arc2r * Math.cos(t1), y: p1y - arc2r * Math.sin(t1) };
+  const arc2End = { x: p1x + arc2r * Math.cos(t1 + t2), y: p1y - arc2r * Math.sin(t1 + t2) };
+  const largeArc1 = Math.abs(t1Deg) > 180 ? 1 : 0;
+  const largeArc2 = Math.abs(t2Deg) > 180 ? 1 : 0;
+  const sweep1 = t1Deg >= 0 ? 0 : 1;
+  const sweep2 = t2Deg >= 0 ? 0 : 1;
+  const extX = p1x + 32 * Math.cos(t1);
+  const extY = p1y - 32 * Math.sin(t1);
+
+  const anglesMarkup = !showAngles ? '' : `
+      <path d="M ${cx + arc1r} ${cy} A ${arc1r} ${arc1r} 0 ${largeArc1} ${sweep1} ${arc1End.x} ${arc1End.y}"
+            fill="none" stroke="${COL.purple}" stroke-width="2.5" marker-end="url(#arrP2)"/>
+      <text x="${cx + arc1r + 8}" y="${cy - 8}" class="svg-label" fill="${COL.purple}" style="font-size:15px;font-weight:700">θ₁</text>
+      <line x1="${p1x}" y1="${p1y}" x2="${extX}" y2="${extY}" stroke="${COL.faint}" stroke-dasharray="4 3" stroke-width="1.5"/>
+      <path d="M ${arc2Start.x} ${arc2Start.y} A ${arc2r} ${arc2r} 0 ${largeArc2} ${sweep2} ${arc2End.x} ${arc2End.y}"
+            fill="none" stroke="${COL.orange}" stroke-width="2.5" marker-end="url(#arrO2)"/>
+      <text x="${arc2Start.x + 6}" y="${arc2Start.y - 8}" class="svg-label" fill="${COL.orange}" style="font-size:15px;font-weight:700">θ₂</text>
+  `;
+
+  return `
+  <svg viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrP2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="${COL.purple}"/>
+      </marker>
+      <marker id="arrO2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="${COL.orange}"/>
+      </marker>
+      <marker id="arrX2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="${COL.axisX}"/>
+      </marker>
+      <marker id="arrY2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="${COL.axisY}"/>
+      </marker>
+    </defs>
+
+    <line x1="${cx}" y1="${cy}" x2="580" y2="${cy}" stroke="${COL.axisX}" stroke-width="2" marker-end="url(#arrX2)"/>
+    <line x1="${cx}" y1="${cy}" x2="${cx}" y2="40" stroke="${COL.axisY}" stroke-width="2" marker-end="url(#arrY2)"/>
+    <text x="570" y="${cy + 22}" class="svg-label" fill="${COL.axisX}" style="font-size:15px;font-weight:700">x</text>
+    <text x="${cx + 10}" y="42" class="svg-label" fill="${COL.axisY}" style="font-size:15px;font-weight:700">y</text>
+
+    <line x1="${cx}" y1="${cy}" x2="${p1x}" y2="${p1y}" stroke="#6a85aa" stroke-width="6" stroke-linecap="round"/>
+    <line x1="${p1x}" y1="${p1y}" x2="${p2x}" y2="${p2y}" stroke="#7d9ac0" stroke-width="6" stroke-linecap="round"/>
+
+    ${anglesMarkup}
+
+    <circle cx="${cx}" cy="${cy}" r="10" fill="${COL.accent}" stroke="${COL.text}" stroke-width="2"/>
+    <circle cx="${p1x}" cy="${p1y}" r="9" fill="${COL.blue}" stroke="${COL.text}" stroke-width="2"/>
+    <circle cx="${p2x}" cy="${p2y}" r="7" fill="${COL.orange}" stroke="${COL.text}" stroke-width="2"/>
+
+    <text x="${cx - 40}" y="${cy + 26}" class="svg-label svg-label-dim">O (base)</text>
+    <text x="${p1x + 14}" y="${p1y + 5}" class="svg-label svg-label-dim">joint 2</text>
+    <text x="${p2x + 14}" y="${p2y + 5}" class="svg-label" fill="${COL.orange}" style="font-weight:700">EE (x, y)</text>
+
+    <text x="${(cx+p1x)/2 - 14}" y="${(cy+p1y)/2 + 22}" class="svg-label svg-label-dim">a₁</text>
+    <text x="${(p1x+p2x)/2 + 8}" y="${(p1y+p2y)/2 - 10}" class="svg-label svg-label-dim">a₂</text>
+  </svg>`;
+}
+
+function svgWorkspace() {
+  const cx = 230, cy = 180;
+  const rMax = 120, rMin = 45;
+  return `
+  <svg viewBox="0 0 500 360" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="annulus-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <line x1="0" y1="0" x2="0" y2="7" stroke="${COL.accent}" stroke-width="1" opacity="0.45"/>
+      </pattern>
+    </defs>
+    <mask id="m1">
+      <rect width="500" height="360" fill="black"/>
+      <circle cx="${cx}" cy="${cy}" r="${rMax}" fill="white"/>
+      <circle cx="${cx}" cy="${cy}" r="${rMin}" fill="black"/>
+    </mask>
+    <rect width="500" height="360" fill="url(#annulus-hatch)" mask="url(#m1)"/>
+
+    <circle cx="${cx}" cy="${cy}" r="${rMax}" fill="none" stroke="${COL.accent}" stroke-width="2.5"/>
+    <circle cx="${cx}" cy="${cy}" r="${rMin}" fill="none" stroke="${COL.red}" stroke-width="2.5" stroke-dasharray="6 4"/>
+
+    <line x1="${cx - 140}" y1="${cy}" x2="${cx + 140}" y2="${cy}" stroke="${COL.faint}" stroke-width="1"/>
+    <line x1="${cx}" y1="${cy - 140}" x2="${cx}" y2="${cy + 140}" stroke="${COL.faint}" stroke-width="1"/>
+
+    <line x1="${cx}" y1="${cy}" x2="${cx + rMax*Math.cos(-0.5)}" y2="${cy + rMax*Math.sin(-0.5)}"
+          stroke="${COL.accent}" stroke-width="2"/>
+    <text x="${cx + 60}" y="${cy - 36}" class="svg-label svg-label-accent" style="font-size:14px">r_max = a₁ + a₂</text>
+
+    <line x1="${cx}" y1="${cy}" x2="${cx - rMin}" y2="${cy}" stroke="${COL.red}" stroke-width="2"/>
+    <text x="${cx - rMin - 82}" y="${cy - 8}" class="svg-label" fill="${COL.red}" style="font-size:14px;font-weight:700">r_min = |a₁ − a₂|</text>
+
+    <circle cx="${cx + 80}" cy="${cy - 30}" r="7" fill="none" stroke="${COL.pink}" stroke-width="2.5"/>
+    <text x="${cx + 94}" y="${cy - 26}" class="svg-label" fill="${COL.pink}" style="font-weight:700">reachable</text>
+
+    <circle cx="${cx + 170}" cy="${cy + 60}" r="7" fill="none" stroke="${COL.red}" stroke-width="2.5"/>
+    <line x1="${cx + 162}" y1="${cy + 52}" x2="${cx + 178}" y2="${cy + 68}" stroke="${COL.red}" stroke-width="2"/>
+    <line x1="${cx + 178}" y1="${cy + 52}" x2="${cx + 162}" y2="${cy + 68}" stroke="${COL.red}" stroke-width="2"/>
+    <text x="${cx + 184}" y="${cy + 64}" class="svg-label" fill="${COL.red}" style="font-weight:700">unreachable</text>
+
+    <circle cx="${cx}" cy="${cy}" r="7" fill="${COL.accent}" stroke="${COL.text}" stroke-width="2"/>
+    <text x="${cx - 40}" y="${cy + 26}" class="svg-label svg-label-dim">base</text>
+
+    <text x="26" y="30" class="svg-label svg-label-accent" style="font-size:16px;font-weight:700">Reachable workspace = annulus</text>
+    <text x="26" y="52" class="svg-label svg-label-dim" style="font-size:13px">Target (x, y) reachable iff  |a₁ − a₂| ≤ √(x²+y²) ≤ a₁ + a₂</text>
+  </svg>`;
+}
+
+function svgIKTriangle(x, y, a1, a2, t1a, t2a) {
+  const scale = 65;
+  const cx = 150, cy = 280;
+  const t1 = deg2rad(t1a), t2 = deg2rad(t2a);
+  const p1x = cx + a1*scale*Math.cos(t1), p1y = cy - a1*scale*Math.sin(t1);
+  const p2x = p1x + a2*scale*Math.cos(t1+t2), p2y = p1y - a2*scale*Math.sin(t1+t2);
+
+  return `
+  <svg viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrXi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="${COL.axisX}"/>
+      </marker>
+      <marker id="arrYi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="${COL.axisY}"/>
+      </marker>
+    </defs>
+    <line x1="${cx}" y1="${cy}" x2="580" y2="${cy}" stroke="${COL.axisX}" stroke-width="1.5" marker-end="url(#arrXi)"/>
+    <line x1="${cx}" y1="${cy}" x2="${cx}" y2="30" stroke="${COL.axisY}" stroke-width="1.5" marker-end="url(#arrYi)"/>
+
+    <polygon points="${cx},${cy} ${p1x},${p1y} ${p2x},${p2y}" fill="rgba(192,124,255,0.12)" stroke="${COL.purple}" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+    <line x1="${cx}" y1="${cy}" x2="${p1x}" y2="${p1y}" stroke="#6a85aa" stroke-width="6" stroke-linecap="round"/>
+    <line x1="${p1x}" y1="${p1y}" x2="${p2x}" y2="${p2y}" stroke="#7d9ac0" stroke-width="6" stroke-linecap="round"/>
+
+    <line x1="${cx}" y1="${cy}" x2="${p2x}" y2="${p2y}" stroke="${COL.purple}" stroke-width="2" stroke-dasharray="5 3"/>
+
+    <path d="M ${p1x + 28*Math.cos(t1+Math.PI)} ${p1y - 28*Math.sin(t1+Math.PI)}
+             A 28 28 0 0 0 ${p1x + 28*Math.cos(t1+t2)} ${p1y - 28*Math.sin(t1+t2)}"
+             fill="none" stroke="${COL.orange}" stroke-width="2"/>
+    <text x="${p1x - 58}" y="${p1y - 20}" class="svg-label" fill="${COL.orange}" style="font-weight:700">π − θ₂</text>
+
+    <path d="M ${cx + 38} ${cy} A 38 38 0 0 0 ${cx + 38*Math.cos(Math.atan2(cy-p2y, p2x-cx))} ${cy - 38*Math.sin(Math.atan2(cy-p2y, p2x-cx))}"
+          fill="none" stroke="${COL.purple}" stroke-width="2"/>
+    <text x="${cx + 44}" y="${cy - 14}" class="svg-label" fill="${COL.purple}" style="font-weight:700">φ</text>
+
+    <text x="${(cx+p1x)/2 - 24}" y="${(cy+p1y)/2 + 24}" class="svg-label svg-label-dim">a₁</text>
+    <text x="${(p1x+p2x)/2 + 8}" y="${(p1y+p2y)/2 - 10}" class="svg-label svg-label-dim">a₂</text>
+    <text x="${(cx+p2x)/2 + 8}" y="${(cy+p2y)/2 + 18}" class="svg-label" fill="${COL.purple}" style="font-weight:700">r = √(x²+y²)</text>
+
+    <circle cx="${cx}" cy="${cy}" r="9" fill="${COL.accent}" stroke="${COL.text}" stroke-width="2"/>
+    <circle cx="${p1x}" cy="${p1y}" r="8" fill="${COL.blue}" stroke="${COL.text}" stroke-width="2"/>
+    <circle cx="${p2x}" cy="${p2y}" r="6" fill="${COL.orange}" stroke="${COL.text}" stroke-width="2"/>
+    <circle cx="${p2x}" cy="${p2y}" r="12" fill="none" stroke="${COL.pink}" stroke-width="2"/>
+
+    <text x="26" y="30" class="svg-label svg-label-accent" style="font-size:16px;font-weight:700">Law of cosines triangle</text>
+    <text x="26" y="52" class="svg-label svg-label-dim" style="font-size:13px">Triangle sides: a₁, a₂, r. Interior angle at joint 2 is (π − θ₂).</text>
+    <text x="26" y="72" class="svg-label svg-label-dim" style="font-size:13px">⟹  r² = a₁² + a₂² − 2·a₁·a₂·cos(π − θ₂) = a₁² + a₂² + 2·a₁·a₂·cos θ₂</text>
+  </svg>`;
+}
+
+function svgTwoSolutions(x, y, a1, a2, t1a, t2a, t1b, t2b) {
+  const scale = 55;
+  const cx = 200, cy = 250;
+  const t1A = deg2rad(t1a), t2A = deg2rad(t2a);
+  const t1B = deg2rad(t1b), t2B = deg2rad(t2b);
+  const p1A = { x: cx + a1*scale*Math.cos(t1A), y: cy - a1*scale*Math.sin(t1A) };
+  const p2A = { x: p1A.x + a2*scale*Math.cos(t1A+t2A), y: p1A.y - a2*scale*Math.sin(t1A+t2A) };
+  const p1B = { x: cx + a1*scale*Math.cos(t1B), y: cy - a1*scale*Math.sin(t1B) };
+  const p2B = { x: p1B.x + a2*scale*Math.cos(t1B+t2B), y: p1B.y - a2*scale*Math.sin(t1B+t2B) };
+
+  return `
+  <svg viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg">
+    <line x1="${cx}" y1="${cy}" x2="580" y2="${cy}" stroke="${COL.axisX}" stroke-width="1.5" opacity="0.7"/>
+    <line x1="${cx}" y1="${cy}" x2="${cx}" y2="30" stroke="${COL.axisY}" stroke-width="1.5" opacity="0.7"/>
+
+    <line x1="${cx}" y1="${cy}" x2="${p1A.x}" y2="${p1A.y}" stroke="#6a85aa" stroke-width="6" stroke-linecap="round"/>
+    <line x1="${p1A.x}" y1="${p1A.y}" x2="${p2A.x}" y2="${p2A.y}" stroke="#7d9ac0" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="${p1A.x}" cy="${p1A.y}" r="8" fill="${COL.blue}" stroke="${COL.text}" stroke-width="2"/>
+    <text x="${p1A.x + 14}" y="${p1A.y + 5}" class="svg-label svg-label-accent" style="font-size:13px;font-weight:700">elbow-down</text>
+
+    <line x1="${cx}" y1="${cy}" x2="${p1B.x}" y2="${p1B.y}" stroke="${COL.purple}" stroke-width="4" stroke-dasharray="6 4" opacity="0.95"/>
+    <line x1="${p1B.x}" y1="${p1B.y}" x2="${p2B.x}" y2="${p2B.y}" stroke="${COL.purple}" stroke-width="4" stroke-dasharray="6 4" opacity="0.95"/>
+    <circle cx="${p1B.x}" cy="${p1B.y}" r="8" fill="${COL.purple}" stroke="${COL.text}" stroke-width="2"/>
+    <text x="${p1B.x + 14}" y="${p1B.y + 5}" class="svg-label" fill="${COL.purple}" style="font-size:13px;font-weight:700">elbow-up</text>
+
+    <circle cx="${p2A.x}" cy="${p2A.y}" r="12" fill="none" stroke="${COL.pink}" stroke-width="2.5"/>
+    <circle cx="${p2A.x}" cy="${p2A.y}" r="5" fill="${COL.pink}"/>
+    <text x="${p2A.x + 18}" y="${p2A.y - 10}" class="svg-label" fill="${COL.pink}" style="font-weight:700">target (x, y)</text>
+
+    <circle cx="${cx}" cy="${cy}" r="9" fill="${COL.accent}" stroke="${COL.text}" stroke-width="2"/>
+    <text x="${cx - 40}" y="${cy + 26}" class="svg-label svg-label-dim">base</text>
+
+    <text x="26" y="30" class="svg-label svg-label-accent" style="font-size:16px;font-weight:700">Two IK configurations — same end-effector position</text>
+    <text x="26" y="52" class="svg-label svg-label-dim" style="font-size:13px">+ branch (sin θ₂ &gt; 0): elbow-down    − branch (sin θ₂ &lt; 0): elbow-up</text>
+  </svg>`;
+}
+
+function svgSingularities() {
+  const panel = (tx, label1, label2, l1x, l1y, l2x, l2y, labelColor) => `
+    <g transform="translate(${tx}, 0)">
+      <line x1="80" y1="180" x2="200" y2="180" stroke="${COL.axisX}" stroke-width="1.2" opacity="0.6"/>
+      <line x1="80" y1="180" x2="80" y2="70" stroke="${COL.axisY}" stroke-width="1.2" opacity="0.6"/>
+      <line x1="80" y1="180" x2="${l1x}" y2="${l1y}" stroke="#6a85aa" stroke-width="6" stroke-linecap="round"/>
+      <line x1="${l1x}" y1="${l1y}" x2="${l2x}" y2="${l2y}" stroke="#7d9ac0" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="80" cy="180" r="8" fill="${COL.accent}" stroke="${COL.text}" stroke-width="2"/>
+      <circle cx="${l1x}" cy="${l1y}" r="7" fill="${COL.blue}" stroke="${COL.text}" stroke-width="2"/>
+      <circle cx="${l2x}" cy="${l2y}" r="6" fill="${COL.orange}" stroke="${COL.text}" stroke-width="2"/>
+      <text x="75" y="225" class="svg-label" fill="${labelColor}" style="font-size:13px;font-weight:700">${label1}</text>
+      <text x="75" y="242" class="svg-label svg-label-dim" style="font-size:12px">${label2}</text>
+    </g>`;
+  return `
+  <svg viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg">
+    ${panel(20,  'Generic',          'sin θ₂ ≠ 0 · det J ≠ 0',    160, 120, 180, 70,  COL.accent)}
+    ${panel(240, 'θ₂ = 0° extended', 'on outer boundary',         170, 120, 260, 60,  COL.orange)}
+    ${panel(460, 'θ₂ = 180° folded', 'on inner boundary',         170, 120, 110, 160, COL.red)}
+  </svg>`;
+}
+
+
+// ========================================================================
+// WIRING
+// ========================================================================
+function refresh() {
+  readInputs();
+  rebuildLinks();
+  applyJoints();
+  renderFK();
+  renderWorkVolume();
+}
+
+function placeTargetMarker() {
+  const [wx, wy, wz] = planarToWorld(state.targetX, state.targetY);
+  targetMarker.position.set(wx, wy, wz);
+  targetMarker.visible = true;
+}
+
+function wireEvents() {
+  ['theta1','d1','a1','alpha1','theta2','d2','a2','alpha2'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', () => {
+      if (id === 'theta1') {
+        document.getElementById('j1-slider').value = el.value;
+        document.getElementById('j1-val').textContent = fmt(parseFloat(el.value)||0, 1) + '°';
+      }
+      if (id === 'theta2') {
+        document.getElementById('j2-slider').value = el.value;
+        document.getElementById('j2-val').textContent = fmt(parseFloat(el.value)||0, 1) + '°';
+      }
+      refresh();
+    });
+  });
+
+  const s1 = document.getElementById('j1-slider');
+  const s2 = document.getElementById('j2-slider');
+  s1.addEventListener('input', () => {
+    document.getElementById('theta1').value = s1.value;
+    document.getElementById('j1-val').textContent = s1.value + '°';
+    refresh();
+  });
+  s2.addEventListener('input', () => {
+    document.getElementById('theta2').value = s2.value;
+    document.getElementById('j2-val').textContent = s2.value + '°';
+    refresh();
+  });
+
+  document.getElementById('btn-solve').addEventListener('click', () => {
+    readInputs();
+    placeTargetMarker();
+    const sol = inverseKinematics(state.targetX, state.targetY);
+    state.ikSolution = sol;
+    if (sol.reachable) {
+      state.activeSolution = 'a';
+      applyIKSolution();
+    } else {
+      renderIK(sol);
+    }
+    document.querySelector('.tab[data-tab="ik"]').click();
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    const d = { theta1: 30, d1: 0, a1: 2, alpha1: 0,
+                theta2: 45, d2: 0, a2: 1.5, alpha2: 0,
+                'target-x': 2.5, 'target-y': 1.5 };
+    Object.entries(d).forEach(([k,v]) => { document.getElementById(k).value = v; });
+    document.getElementById('j1-slider').value = 30;
+    document.getElementById('j2-slider').value = 45;
+    document.getElementById('j1-val').textContent = '30°';
+    document.getElementById('j2-val').textContent = '45°';
+    targetMarker.visible = false;
+    state.ikSolution = null;
+    renderIK(null);
+    refresh();
+  });
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.deriv-subtab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.deriv-subtab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.deriv-sub').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('deriv-' + btn.dataset.sub).classList.add('active');
+    });
+  });
+
+
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  initThree();
+  wireEvents();
+  refresh();
+});
+</script>
+</body>
+</html>
