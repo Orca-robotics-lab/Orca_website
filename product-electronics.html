@@ -344,6 +344,19 @@
   .activity-list { grid-template-columns: 1fr; }
   .related-strip { grid-template-columns: 120px 1fr; }
 }
+
+/* rounded corners */
+.pdp__price-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pdp__price-opt{display:flex;flex-direction:column;gap:4px;border:none;border-radius:0;padding:0 24px 0 0;background:transparent;text-align:left;cursor:pointer;transition:opacity .16s}
+.pdp__price-opt:hover{opacity:.7}
+.pdp__price-opt.is-active .pdp__price-opt-value{color:#000}
+.pdp__price-opt-label{font-family:var(--font-mono);font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:#000}
+.pdp__price-opt-value{font-family:var(--font-body);font-weight:700;font-size:24px;color:#000;line-height:1}
+.pdp__price-opt.is-active .pdp__price-opt-value{color:#000}
+.pdp__main-img{border-radius:12px}
+.pdp__thumb{border-radius:8px}
+.pdp__buy{border-radius:12px}
+.related-strip{border-radius:12px}
 </style>
 </head>
 <body>
@@ -422,8 +435,15 @@
         </ul>
 
         <div class="pdp__buy">
-          <div class="pdp__price-row">
-            <div class="pdp__price">₹7,999</div>
+          <div class="pdp__price-options">
+            <button type="button" class="pdp__price-opt is-active" data-variant="with book">
+              <span class="pdp__price-opt-label">With Book</span>
+              <span class="pdp__price-opt-value">₹7,999</span>
+            </button>
+            <button type="button" class="pdp__price-opt" data-variant="without book">
+              <span class="pdp__price-opt-label">Without Book</span>
+              <span class="pdp__price-opt-value">₹5,599</span>
+            </button>
           </div>
           <div class="pdp__avail">ships within 5–7 business days</div>
           <div class="pdp__buy-actions">
@@ -443,9 +463,9 @@
         <p>The system pairs a <strong>590+ page illustrated handbook</strong> with a <strong>complete component set</strong> and a real <strong>digital storage oscilloscope</strong>. By the time you finish, you won't just know how resistors, capacitors, inductors, and diodes behave — you'll have measured them, seen their waveforms, and built working circuits around them.</p>
         <p>This is the foundation that every electronics engineer, robotics builder, and maker needs — and almost nobody actually gets from standard coursework. Finish all the activities and you'll earn an ORCA Robotics Certificate of Completion to show for it.</p>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px;">
-          <img src="assets/elec-activity.jpg" alt="Student working through an activity" style="width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);" />
-          <img src="assets/elec-oscilloscope.jpg" alt="Oscilloscope measuring capacitor charging" style="width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);" />
-          <img src="assets/elec-handbook.jpg" alt="Handbook showing parallel connection" style="width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);" />
+          <img src="assets/elec-activity.jpg" alt="Student working through an activity" style="width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);border-radius:10px;" />
+          <img src="assets/elec-oscilloscope.jpg" alt="Oscilloscope measuring capacitor charging" style="width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);border-radius:10px;" />
+          <img src="assets/elec-handbook.jpg" alt="Handbook showing parallel connection" style="width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);border-radius:10px;" />
         </div>
       </div>
     </div>
@@ -593,6 +613,7 @@
       <li><a href="terms.html">Terms &amp; Conditions</a></li>
       <li><a href="refund-policy.html">Refund Policy</a></li>
       <li><a href="shipping-policy.html">Shipping Policy</a></li>
+      <li><a href="contact.html">Contact Us</a></li>
     </ul>
     <div class="footer__right"><a href="mailto:info@orcarobotics.in">info@orcarobotics.in</a></div>
   </div>
@@ -777,6 +798,42 @@ function galleryNav(dir) {
   var nextIdx = (activeIdx + dir + thumbs.length) % thumbs.length;
   thumbs[nextIdx].click();
 }
+// Sync price-option cards with the Shopify variant dropdown
+(function(){
+  var opts = Array.from(document.querySelectorAll('.pdp__price-opt'));
+  if(!opts.length) return;
+  var node = document.getElementById('product-component-1781338761901');
+
+  function findSelect(){ return node ? node.querySelector('select') : null; }
+
+  function applyVariant(key){
+    var sel = findSelect();
+    if(!sel) return false;
+    var matched = false;
+    Array.from(sel.options).forEach(function(o){
+      var t = o.textContent.trim().toLowerCase();
+      if(t === key){ sel.value = o.value; matched = true; }
+    });
+    if(matched){ sel.dispatchEvent(new Event('change', {bubbles:true})); }
+    return matched;
+  }
+
+  opts.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      opts.forEach(function(b){ b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      var key = btn.getAttribute('data-variant');
+      // retry until the Shopify dropdown has rendered
+      if(!applyVariant(key)){
+        var tries = 0;
+        var iv = setInterval(function(){
+          tries++;
+          if(applyVariant(key) || tries > 20){ clearInterval(iv); }
+        }, 250);
+      }
+    });
+  });
+})();
 </script>
 </body>
 </html>

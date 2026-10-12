@@ -164,10 +164,6 @@
       url: "https://chat.whatsapp.com/IxVYYtXWHZ10hDHsYYKpIW",
     },
     {
-      name: "Discord",
-      url: "https://discord.gg/nh2f2kx6",
-    },
-    {
       name: "Instagram",
       url: "https://instagram.com/orca.robotics",
     },

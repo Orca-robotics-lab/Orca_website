@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Handbook of Basic Electronics — Orca Robotics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+.pdp { padding: 40px 0 80px; }
+
+.pdp__top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: start;
+  padding-bottom: 56px;
+  border-bottom: 1px solid var(--border);
+}
+.pdp__gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 88px;
+  align-self: start;
+}
+.pdp__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+.pdp__main-img {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pdp__main-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pdp__thumb-row { display: flex; gap: 10px; }
+.pdp__thumb {
+  width: 72px; height: 72px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.18s;
+  flex-shrink: 0;
+}
+.pdp__thumb.is-active { border-color: var(--accent); }
+.gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background: rgba(0,0,0,0.28);
+  border: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 2;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.pdp__main-img:hover .gallery-arrow { opacity: 1; }
+.gallery-arrow:hover { background: rgba(0,0,0,0.55); }
+.gallery-arrow--prev { left: 12px; }
+.gallery-arrow--prev:hover { transform: translateY(-50%) translateX(-2px); }
+.gallery-arrow--next { right: 12px; }
+.gallery-arrow--next:hover { transform: translateY(-50%) translateX(2px); }
+
+.pdp__info { display: flex; flex-direction: column; gap: 0; }
+.pdp__tag-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.pdp__num { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; }
+.pdp__title {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(22px, 2.8vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+.pdp__subtitle {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pdp__features {
+  list-style: none; padding: 0; margin: 0 0 24px;
+  display: flex; flex-direction: column; gap: 9px;
+}
+.pdp__features li {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 11px;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+.pdp__features li::before {
+  content: "→";
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  padding-top: 2px;
+}
+
+.pdp__buy {
+  border: 1px solid var(--border);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pdp__price-row { display: flex; align-items: baseline; gap: 12px; }
+.pdp__price {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--text-primary);
+}
+.pdp__stock-out {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+  padding: 3px 9px;
+}
+.pdp__notify {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+.pdp__buy-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch; margin-top: 4px; }
+.pdp__buy-opt { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; border: 1px solid var(--border); border-radius: 12px; padding: 20px 18px; }
+.pdp__buy-opt-label { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: #000; }
+.pdp__buy-sub { font-size: 16px; font-weight: 600; color: #000; }
+.pdp__buy-opt--main .pdp__price { font-family: var(--font-body); font-weight: 600; font-size: 14px; color: #000; line-height: 1; }
+.pdp__buy-slot { margin-top: auto; padding-top: 14px; display: flex; justify-content: center; width: 100%; }
+.pdp__btn-ebook { margin-top: auto; display: flex; align-items: center; justify-content: center; width: 100%; height: 48px; background: #fff; border: 1px solid var(--border); border-radius: 16px; text-decoration: none; transition: border-color 0.18s, box-shadow 0.18s; padding: 0 14px; }
+.pdp__btn-ebook:hover { border-color: var(--text-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.pdp__btn-ebook img { max-width: 100%; max-height: 30px; object-fit: contain; display: block; }
+
+.pdp__btn-cart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 46px;
+  background: #f0c14b;
+  border: 1px solid #a88734;
+  color: #111;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.18s, opacity 0.18s;
+}
+.pdp__btn-cart:hover:not(:disabled) { background: #e8b830; }
+.pdp__btn-cart:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.pdp__btn-buy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 46px;
+  background: #e87722;
+  border: 1px solid #c45f0a;
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.18s, opacity 0.18s;
+}
+.pdp__btn-buy:hover:not(:disabled) { background: #d4681a; }
+.pdp__btn-buy:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Sections ── */
+.pdp__section {
+  padding: 48px 0;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 48px;
+}
+.pdp__section-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text-primary);
+  padding-top: 4px;
+}
+.pdp__body {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+}
+.pdp__body p { margin: 0 0 14px; }
+.pdp__body p:last-child { margin: 0; }
+.pdp__body strong { color: var(--text-primary); }
+
+/* Activities list */
+.activity-list {
+  list-style: none; padding: 0; margin: 16px 0 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px;
+}
+.activity-list li {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+.activity-list li::before {
+  content: "→";
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  padding-top: 2px;
+}
+
+/* Components table */
+.comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 16px;
+}
+.comp-table thead tr { background: var(--text-primary); }
+.comp-table thead td {
+  padding: 10px 14px;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--text-primary);
+}
+.comp-table tbody tr:nth-child(even) td { background: var(--bg); }
+.comp-table tbody td {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--text-primary);
+}
+.comp-table tbody td:last-child {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: center;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* FAQ */
+.faq-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
+.faq-item {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+}
+.faq-item:first-child { border-top: 1px solid var(--border); }
+.faq-q {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+.faq-a {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Specs table */
+.specs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.specs-table tr:nth-child(odd) td { background: var(--bg); }
+.specs-table td {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.specs-table td:first-child {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  width: 38%;
+}
+.specs-table td:last-child { font-weight: 500; color: var(--text-primary); }
+
+/* Related */
+.related-strip {
+  border: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  overflow: hidden;
+}
+.related-strip:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.related-strip__img {
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.related-strip__img img { width: 100%; height: 100%; object-fit: contain; padding: 16px; }
+.related-strip__body { padding: 20px 24px; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+.related-strip__num { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.related-strip__title { font-family: var(--font-display); font-weight: 700; font-size: 16px; }
+.related-strip__desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; }
+
+@media (max-width: 860px) {
+  .pdp__top { grid-template-columns: 1fr; gap: 32px; }
+  .pdp__gallery { position: static; }
+  .pdp__section { grid-template-columns: 1fr; gap: 20px; }
+  .activity-list { grid-template-columns: 1fr; }
+  .related-strip { grid-template-columns: 120px 1fr; }
+}
+
+/* rounded corners */
+.pdp__main-img{border-radius:12px}
+.pdp__thumb{border-radius:8px}
+.pdp__buy{border-radius:12px}
+.related-strip{border-radius:12px}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav__inner">
+    <a href="index.html" class="brand" aria-label="Orca Robotics home">
+      <img class="brand__mark-img" src="assets/orca-mark.png" alt="" />
+      <span class="brand__word">Orca Robotics</span>
+    </a>
+    <nav>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="workshops.html">Workshops</a></li>
+        <li><a href="simulators.html">Simulators</a></li>
+        <li><a href="atal-lab.html">Atal Lab</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+    <button type="button" class="btn btn--outline btn--sm nav__cta" data-community-open>Join Community</button>
+    <a href="shop.html" class="btn btn--primary btn--sm nav__cta">Shop</a>
+    <button class="nav__hamburger" aria-label="Open menu"><span></span></button>
+  </div>
+</header>
+
+<!-- Breadcrumb -->
+<div style="border-bottom:1px solid var(--border);padding:10px 0;background:var(--surface);">
+  <div class="container" style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:0.08em;color:var(--text-muted);">
+    <a href="shop.html" style="color:var(--text-muted);text-decoration:none;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">Shop</a>
+    <span>›</span>
+    <span style="color:var(--text-primary);">Handbook of Basic Electronics</span>
+  </div>
+</div>
+
+<main class="pdp">
+  <div class="container">
+
+    <!-- Top: image + info -->
+    <div class="pdp__top">
+
+      <!-- Gallery -->
+      <div class="pdp__gallery">
+        <div class="pdp__main-img" style="position:relative;">
+          <img id="main-img" src="assets/handbook-cover.jpeg" alt="Handbook of Basic Electronics — cover" />
+          <button class="gallery-arrow gallery-arrow--prev" onclick="galleryNav(-1)" aria-label="Previous image"><svg width="10" height="18" viewBox="0 0 10 18" fill="none"><path d="M9 1L1 9l8 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="gallery-arrow gallery-arrow--next" onclick="galleryNav(1)" aria-label="Next image"><svg width="10" height="18" viewBox="0 0 10 18" fill="none"><path d="M1 1l8 8-8 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="pdp__thumb-row" style="flex-wrap:wrap;">
+          <div class="pdp__thumb is-active" onclick="switchImg(this,'assets/handbook-cover.jpeg')"><img src="assets/handbook-cover.jpeg" alt="Handbook cover" /></div>
+          <div class="pdp__thumb" onclick="switchImg(this,'assets/handbook-page1.jpeg')"><img src="assets/handbook-page1.jpeg" alt="Activity page with circuit diagrams" /></div>
+          <div class="pdp__thumb" onclick="switchImg(this,'assets/handbook-page2.jpeg')"><img src="assets/handbook-page2.jpeg" alt="Parallel connection explained with analogy" /></div>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="pdp__info">
+        <div class="pdp__tag-row">
+          <span class="pdp__num">P—01</span>
+          <span class="tag">Hardcover + E-book</span>
+        </div>
+        <h1 class="pdp__title">Handbook of Basic Electronics</h1>
+        <p class="pdp__subtitle">Understanding electronics from scratch. A 590+ page illustrated book that takes you from atoms to a working power supply, built on analogy, first principles, and activities you work through yourself.</p>
+
+        <ul class="pdp__features">
+          <li>590+ page illustrated book, activity-first and self-learner friendly</li>
+          <li>43 activities across 14 topic areas, beginner to intermediate level</li>
+          <li>Every concept introduced by analogy, derived from first principles, then applied</li>
+          <li>Covers: DC/AC circuits, semiconductors, diodes, filters, rectifiers, logic gates</li>
+          <li>Calculations, measurement setups, and expected results for every activity</li>
+          <li>Certificate of Completion on finishing all activities</li>
+          <li>For Class 11–12 students, UG engineers, makers, and lab coordinators</li>
+          <li>Made in India</li>
+        </ul>
+
+        <div class="pdp__buy">
+          <div class="pdp__avail">ships within 5–7 business days</div>
+          <div class="pdp__buy-actions">
+            <div class="pdp__buy-opt pdp__buy-opt--main">
+              <span class="pdp__buy-opt-label">Hardcover</span>
+              <div class="pdp__price">₹2,000</div>
+              <div class="pdp__buy-slot" id='product-component-1791695117251'></div>
+            </div>
+            <div class="pdp__buy-opt pdp__buy-opt--ebook">
+              <span class="pdp__buy-opt-label">E-book</span>
+              <div class="pdp__buy-sub">Kindle edition</div>
+              <button type="button" class="pdp__btn-ebook" aria-label="Buy the e-book on Amazon Kindle" onclick="openKindlePopup()"><img src="assets/amazon-kindle.png" alt="Amazon Kindle" /></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">About this item</div>
+      <div class="pdp__body">
+        <p>Most electronics kits give you a breadboard and a "blink an LED" tutorial. This is not that.</p>
+        <p>The Handbook of Basic Electronics is a structured, activity-first book built for anyone who wants to genuinely understand electronics, not just follow instructions until something lights up. Every concept is introduced through analogy, derived from first principles, and immediately applied in a hands-on circuit you build yourself.</p>
+        <p>Across <strong>590+ illustrated pages</strong>, the handbook walks you through how resistors, capacitors, inductors, and diodes behave, with the calculations, circuit diagrams, and measurement setups that show you exactly what to expect. By the time you finish, you won't just know how these components work; you'll have seen the reasoning behind every one.</p>
+        <p>Available in two editions: a physical <strong>hardcover</strong> and a <strong>Kindle e-book</strong>. Both carry the same 590+ pages and 43 activities, so you can learn in print or on any device.</p>
+        <p>This is the foundation that every electronics engineer, robotics builder, and maker needs, and almost nobody actually gets from standard coursework. Finish all the activities and you'll earn an ORCA Robotics Certificate of Completion to show for it.</p>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:20px;">
+          <img src="assets/handbook-page1.jpeg" alt="Activity page with circuit and connection diagrams" style="width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);border-radius:10px;" />
+          <img src="assets/handbook-page2.jpeg" alt="Parallel connection explained with a water analogy" style="width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);border-radius:10px;" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Who it's for -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">Who this is for</div>
+      <ul class="pdp__features" style="margin:0;">
+        <li>Class 11–12 students in Physics or Electronics streams who want to go deeper than the textbook</li>
+        <li>Engineering students (ECE, EEE, Instrumentation) in 1st or 2nd year building their fundamentals</li>
+        <li><span>Hobbyists and makers who have been following tutorials but don't understand <em>why</em> things work</span></li>
+        <li>Science teachers and lab coordinators looking for a structured, self-contained lab experience</li>
+        <li>Anyone preparing for GATE, JEE, or university practicals in electronics</li>
+      </ul>
+    </div>
+
+    <!-- 43 Activities -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">43 Activities</div>
+      <div>
+        <p class="pdp__body" style="margin-bottom:0;">Across 14 topic areas — from resistor circuits and RC filters to rectifiers, clippers, clampers, Zener regulators, and logic gates. Every activity includes calculations, measurement setups, and expected results.</p>
+        <ul class="activity-list">
+          <li>Light sensing circuit with automatic ON/OFF</li>
+          <li>LED brightness control using a knob</li>
+          <li>Capacitor powering an LED without a battery</li>
+          <li>Live charging &amp; discharging curves on the oscilloscope</li>
+          <li>Inductor spark effect using a reverse-biased LED</li>
+          <li>Measuring a transformer's output with an oscilloscope</li>
+          <li>Low pass and high pass filters — built and compared</li>
+          <li>AC waveform shaping using clipper circuits</li>
+          <li>Waveform shifting using a clamper circuit</li>
+          <li>AC to DC conversion using a bridge rectifier</li>
+          <li>Smooth DC output using a capacitor filter</li>
+          <li>Stable voltage output using a Zener regulator</li>
+          <li>Spike protection circuit for sensitive components</li>
+          <li>Logic gates built using only diodes and resistors</li>
+          <li>Complete DC power supply built from scratch</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="pdp__section">
+      <div class="pdp__section-label">FAQ</div>
+      <ul class="faq-list">
+        <li class="faq-item">
+          <div class="faq-q">Do I need prior knowledge?</div>
+          <p class="faq-a">No. The handbook starts from atomic structure and builds up from there. No background in electronics is assumed.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">What formats is the book available in?</div>
+          <p class="faq-a">Both a physical hardcover and a Kindle e-book. Choose the hardcover above for the printed edition, or the e-book option to read it on the Amazon Kindle app or device. Both editions have the same 590+ pages and all 43 activities.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">Does this include components or a kit?</div>
+          <p class="faq-a">No. Both editions are the book only. The components and oscilloscope are not included.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">Can I do the activities with my own components?</div>
+          <p class="faq-a">Yes. Every activity lists the components it needs, so you can source them yourself or pair the book with our Basic Electronics Learning System, which ships with everything.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">What format is the book?</div>
+          <p class="faq-a">590+ pages, fully illustrated, available as a physical hardcover or a Kindle e-book.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">How do I get the certificate?</div>
+          <p class="faq-a">Complete all activities, submit videos via the Google Form included in the handbook, and receive your ORCA Robotics Certificate of Completion.</p>
+        </li>
+        <li class="faq-item">
+          <div class="faq-q">How do I contact you?</div>
+          <p class="faq-a">Instagram: <a href="https://instagram.com/orca.robotics" style="color:var(--accent);">@orca.robotics</a> &nbsp;|&nbsp; Email: <a href="mailto:info@orcarobotics.in" style="color:var(--accent);">info@orcarobotics.in</a></p>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Related -->
+    <div class="pdp__section" style="border-bottom:none;padding-bottom:0;">
+      <div class="pdp__section-label">Also in the shop</div>
+      <a class="related-strip" href="product-electronics.html">
+        <div class="related-strip__img">
+          <img src="assets/electronics-cover.jpg" alt="Basic Electronics Learning System" />
+        </div>
+        <div class="related-strip__body">
+          <div class="related-strip__num">P—01</div>
+          <div class="related-strip__title">Basic Electronics Learning System</div>
+          <p class="related-strip__desc">Want the hands-on version? This pairs the handbook with every component and a real oscilloscope.</p>
+          <span class="btn btn--outline btn--sm" style="margin-top:8px;display:inline-flex;">View Product <span class="arrow"></span></span>
+        </div>
+      </a>
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div>Orca Robotics © 2025</div>
+    <ul class="footer__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="workshops.html">Workshops</a></li>
+      <li><a href="simulators.html">Simulators</a></li>
+      <li><a href="atal-lab.html">Atal Lab</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+      <li><a href="terms.html">Terms &amp; Conditions</a></li>
+      <li><a href="refund-policy.html">Refund Policy</a></li>
+      <li><a href="shipping-policy.html">Shipping Policy</a></li>
+      <li><a href="contact.html">Contact Us</a></li>
+    </ul>
+    <div class="footer__right"><a href="mailto:info@orcarobotics.in">info@orcarobotics.in</a></div>
+  </div>
+</footer>
+
+<script src="scripts.js"></script>
+<style>
+#kindle-popup{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(17,17,17,0.72);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .3s ease}
+#kindle-popup.is-open{display:flex;opacity:1;pointer-events:auto}
+.kindle-card{position:relative;width:min(560px,100%);max-height:calc(100vh - 48px);overflow-y:auto;background:var(--surface);border:1px solid var(--border-strong);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.28);padding:40px}
+.kindle-card__close{position:absolute;top:16px;right:16px;width:36px;height:36px;display:grid;place-items:center;background:transparent;border:1px solid var(--border);border-radius:50%;color:var(--text-primary);font-size:18px;line-height:1;cursor:pointer;transition:border-color .18s,color .18s}
+.kindle-card__close:hover{border-color:var(--accent);color:var(--accent)}
+.kindle-card__eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.kindle-card__title{font-family:var(--font-display);font-weight:700;font-size:24px;margin:0 0 6px;color:var(--text-primary)}
+.kindle-card__lead{font-size:14px;color:var(--text-secondary);line-height:1.6;margin:0 0 22px}
+.kindle-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kindle-store{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px;padding:13px 15px;text-decoration:none;color:var(--text-primary);font-family:var(--font-display);font-weight:600;font-size:14px;transition:border-color .16s,box-shadow .16s}
+.kindle-store:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(0,0,0,0.08)}
+.kindle-store__flag{font-size:20px;line-height:1}
+.kindle-sub{grid-column:1/-1;font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-top:8px}
+@media (max-width:520px){.kindle-grid{grid-template-columns:1fr}.kindle-card{padding:30px 22px}}
+</style>
+<div id="kindle-popup" role="dialog" aria-modal="true" aria-labelledby="kindle-popup-title">
+  <div class="kindle-card">
+    <button class="kindle-card__close" aria-label="Close" onclick="closeKindlePopup()">&#x2715;</button>
+    <div class="kindle-card__eyebrow">Amazon Kindle</div>
+    <h2 class="kindle-card__title" id="kindle-popup-title">Choose your Amazon store</h2>
+    <p class="kindle-card__lead">Open the Kindle e-book on the Amazon store for your country.</p>
+    <div class="kindle-grid">
+      <a class="kindle-store" href="https://www.amazon.in/dp/B0HHZLYCTW" target="_blank" rel="noopener"><span class="kindle-store__flag">🇮🇳</span>India</a>
+      <a class="kindle-store" href="https://www.amazon.com/dp/B0HHZLYCTW" target="_blank" rel="noopener"><span class="kindle-store__flag">🇺🇸</span>United States</a>
+      <div class="kindle-sub">Europe</div>
+      <a class="kindle-store" href="https://www.amazon.co.uk/dp/B0HHZLYCTW" target="_blank" rel="noopener"><span class="kindle-store__flag">🇬🇧</span>United Kingdom</a>
+      <a class="kindle-store" href="https://www.amazon.de/dp/B0HHZLYCTW" target="_blank" rel="noopener"><span class="kindle-store__flag">🇩🇪</span>Germany</a>
+      <a class="kindle-store" href="https://www.amazon.fr/dp/B0HHZLYCTW" target="_blank" rel="noopener"><span class="kindle-store__flag">🇫🇷</span>France</a>
+      <a class="kindle-store" href="https://www.amazon.es/dp/B0HHZLYCTW" target="_blank" rel="noopener"><span class="kindle-store__flag">🇪🇸</span>Spain</a>
+      <a class="kindle-store" href="https://www.amazon.it/dp/B0HHZLYCTW" target="_blank" rel="noopener"><span class="kindle-store__flag">🇮🇹</span>Italy</a>
+      <a class="kindle-store" href="https://www.amazon.nl/dp/B0HHZLYCTW" target="_blank" rel="noopener"><span class="kindle-store__flag">🇳🇱</span>Netherlands</a>
+      <div class="kindle-sub">Other regions</div>
+      <a class="kindle-store" href="https://www.amazon.co.jp/dp/B0HHZLYCTW" target="_blank" rel="noopener"><span class="kindle-store__flag">🇯🇵</span>Japan</a>
+      <a class="kindle-store" href="https://www.amazon.ca/dp/B0HHZLYCTW" target="_blank" rel="noopener"><span class="kindle-store__flag">🇨🇦</span>Canada</a>
+      <a class="kindle-store" href="https://www.amazon.com.mx/dp/B0HHZLYCTW" target="_blank" rel="noopener"><span class="kindle-store__flag">🇲🇽</span>Mexico</a>
+      <a class="kindle-store" href="https://www.amazon.com.br/dp/B0HHZLYCTW" target="_blank" rel="noopener"><span class="kindle-store__flag">🇧🇷</span>Brazil</a>
+      <a class="kindle-store" href="https://www.amazon.com.au/dp/B0HHZLYCTW" target="_blank" rel="noopener"><span class="kindle-store__flag">🇦🇺</span>Australia</a>
+    </div>
+  </div>
+</div>
+<script>
+function openKindlePopup(){var p=document.getElementById('kindle-popup');p.classList.add('is-open');document.body.style.overflow='hidden';}
+function closeKindlePopup(){var p=document.getElementById('kindle-popup');p.classList.remove('is-open');document.body.style.overflow='';}
+document.getElementById('kindle-popup').addEventListener('click',function(e){if(e.target===this)closeKindlePopup();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeKindlePopup();});
+</script>
+<script type="text/javascript">
+/*<![CDATA[*/
+(function () {
+  var scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
+  if (window.ShopifyBuy) {
+    if (window.ShopifyBuy.UI) {
+      ShopifyBuyInit();
+    } else {
+      loadScript();
+    }
+  } else {
+    loadScript();
+  }
+  function loadScript() {
+    var script = document.createElement('script');
+    script.async = true;
+    script.src = scriptURL;
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(script);
+    script.onload = ShopifyBuyInit;
+  }
+  function ShopifyBuyInit() {
+    var client = ShopifyBuy.buildClient({
+      domain: 's1nbge-re.myshopify.com',
+      storefrontAccessToken: 'be50d2289ab65427b570af0332d10844',
+    });
+    ShopifyBuy.UI.onReady(client).then(function (ui) {
+      ui.createComponent('product', {
+        id: '9538142535937',
+        node: document.getElementById('product-component-1791695117251'),
+        moneyFormat: 'Rs.%20%7B%7Bamount%7D%7D',
+        options: {
+  "product": {
+    "styles": {
+      "product": {
+        "@media (min-width: 601px)": {
+          "max-width": "100%",
+          "margin-left": "0",
+          "margin-bottom": "0"
+        }
+      },
+      "button": {
+        "font-family": "Oxygen, sans-serif",
+        "font-weight": "bold",
+        ":hover": { "background-color": "#d16b1f" },
+        "background-color": "#e87722",
+        ":focus": { "background-color": "#d16b1f" },
+        "border-radius": "16px"
+      }
+    },
+    "contents": { "img": false, "title": false, "price": false },
+    "text": { "button": "Add to cart" },
+    "googleFonts": ["Oxygen"]
+  },
+  "modalProduct": {
+    "contents": { "img": false, "imgWithCarousel": true, "button": false, "buttonWithQuantity": true },
+    "styles": {
+      "product": { "@media (min-width: 601px)": { "max-width": "100%", "margin-left": "0px", "margin-bottom": "0px" } },
+      "button": {
+        "font-family": "Oxygen, sans-serif",
+        "font-weight": "bold",
+        ":hover": { "background-color": "#d16b1f" },
+        "background-color": "#e87722",
+        ":focus": { "background-color": "#d16b1f" },
+        "border-radius": "16px"
+      }
+    },
+    "googleFonts": ["Oxygen"],
+    "text": { "button": "Add to cart" }
+  },
+  "option": {},
+  "cart": {
+    "styles": {
+      "button": {
+        "font-family": "Oxygen, sans-serif",
+        "font-weight": "bold",
+        ":hover": { "background-color": "#d16b1f" },
+        "background-color": "#e87722",
+        ":focus": { "background-color": "#d16b1f" },
+        "border-radius": "16px"
+      }
+    },
+    "text": { "total": "Subtotal", "button": "Checkout" },
+    "googleFonts": ["Oxygen"]
+  },
+  "toggle": {
+    "styles": {
+      "toggle": {
+        "font-family": "Oxygen, sans-serif",
+        "font-weight": "bold",
+        "background-color": "#e87722",
+        ":hover": { "background-color": "#d16b1f" },
+        ":focus": { "background-color": "#d16b1f" }
+      }
+    },
+    "googleFonts": ["Oxygen"]
+  }
+},
+      });
+    });
+  }
+})();
+/*]]>*/
+</script>
+
+<script>
+var GALLERY_IMGS = [
+  'assets/handbook-cover.jpeg',
+  'assets/handbook-page1.jpeg',
+  'assets/handbook-page2.jpeg'
+];
+function switchImg(thumb, src) {
+  document.getElementById('main-img').src = src;
+  document.querySelectorAll('.pdp__thumb').forEach(function(t){ t.classList.remove('is-active'); });
+  thumb.classList.add('is-active');
+}
+function galleryNav(dir) {
+  var thumbs = Array.from(document.querySelectorAll('.pdp__thumb'));
+  var activeIdx = thumbs.findIndex(function(t){ return t.classList.contains('is-active'); });
+  var nextIdx = (activeIdx + dir + thumbs.length) % thumbs.length;
+  thumbs[nextIdx].click();
+}
+</script>
+</body>
+</html>
