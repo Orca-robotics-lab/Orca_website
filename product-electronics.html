@@ -357,6 +357,7 @@
 .pdp__thumb{border-radius:8px}
 .pdp__buy{border-radius:12px}
 .related-strip{border-radius:12px}
+.pdp__buy-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;align-items:stretch;margin-top:4px}.pdp__buy-opt{min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;border:1px solid var(--border);border-radius:12px;padding:20px 12px}.pdp__buy-opt-label{font-family:var(--font-display);font-weight:700;font-size:16px;color:#000}.pdp__buy-price{font-family:var(--font-body);font-weight:600;font-size:14px;color:#000;line-height:1}.pdp__buy-slot{margin-top:auto;padding-top:14px;display:flex;justify-content:center;width:100%}.pdp__buy-slot form{margin:0}.pdp__buy-slot .PaymentButton-securedBy,.pdp__buy-slot .PaymentButton-text{white-space:nowrap !important;text-wrap:nowrap !important}
 </style>
 </head>
 <body>
@@ -435,20 +436,18 @@
         </ul>
 
         <div class="pdp__buy">
-          <div class="pdp__price-options">
-            <button type="button" class="pdp__price-opt is-active" data-variant="with book">
-              <span class="pdp__price-opt-label">With Book</span>
-              <span class="pdp__price-opt-value">₹7,999</span>
-            </button>
-            <button type="button" class="pdp__price-opt" data-variant="without book">
-              <span class="pdp__price-opt-label">Without Book</span>
-              <span class="pdp__price-opt-value">₹5,599</span>
-            </button>
-          </div>
           <div class="pdp__avail">ships within 5–7 business days</div>
-          <div class="pdp__buy-actions">
-            <!-- Shopify Buy Button -->
-            <div id='product-component-1781338761901'></div>
+          <div class="pdp__buy-groups">
+            <div class="pdp__buy-opt">
+              <span class="pdp__buy-opt-label">With Book</span>
+              <div class="pdp__buy-price">₹7,999</div>
+              <div class="pdp__buy-slot"><form><script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_To6X0KBTqfuAcd" async></script></form></div>
+            </div>
+            <div class="pdp__buy-opt">
+              <span class="pdp__buy-opt-label">Without Book</span>
+              <div class="pdp__buy-price">₹5,599</div>
+              <div class="pdp__buy-slot" id="rzp-without-book"><form><script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_To6dXmUw6oGQzJ" async></script></form></div>
+            </div>
           </div>
         </div>
       </div>
@@ -620,165 +619,7 @@
 </footer>
 
 <script src="scripts.js"></script>
-<script type="text/javascript">
-/*<![CDATA[*/
-(function () {
-  var scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
-  if (window.ShopifyBuy) {
-    if (window.ShopifyBuy.UI) {
-      ShopifyBuyInit();
-    } else {
-      loadScript();
-    }
-  } else {
-    loadScript();
-  }
-  function loadScript() {
-    var script = document.createElement('script');
-    script.async = true;
-    script.src = scriptURL;
-    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(script);
-    script.onload = ShopifyBuyInit;
-  }
-  function ShopifyBuyInit() {
-    var client = ShopifyBuy.buildClient({
-      domain: 's1nbge-re.myshopify.com',
-      storefrontAccessToken: 'be50d2289ab65427b570af0332d10844',
-    });
-    ShopifyBuy.UI.onReady(client).then(function (ui) {
-      ui.createComponent('product', {
-        id: '9186008760577',
-        node: document.getElementById('product-component-1781338761901'),
-        moneyFormat: 'Rs.%20%7B%7Bamount%7D%7D',
-        options: {
-  "product": {
-    "styles": {
-      "product": {
-        "text-align": "left",
-        "@media (min-width: 601px)": {
-          "max-width": "calc(25% - 20px)",
-          "margin-left": "0px",
-          "margin-bottom": "50px"
-        }
-      },
-      "button": {
-        "font-family": "Oxygen, sans-serif",
-        "font-weight": "bold",
-        ":hover": {
-          "background-color": "#d16b1f"
-        },
-        "background-color": "#e87722",
-        ":focus": {
-          "background-color": "#d16b1f"
-        },
-        "border-radius": "16px"
-      }
-    },
-    "contents": {
-      "img": false,
-      "title": false,
-      "price": false
-    },
-    "text": {
-      "button": "Add to cart"
-    },
-    "googleFonts": [
-      "Oxygen"
-    ]
-  },
-  "productSet": {
-    "styles": {
-      "products": {
-        "@media (min-width: 601px)": {
-          "margin-left": "-20px"
-        }
-      }
-    }
-  },
-  "modalProduct": {
-    "contents": {
-      "img": false,
-      "imgWithCarousel": true,
-      "button": false,
-      "buttonWithQuantity": true
-    },
-    "styles": {
-      "product": {
-        "@media (min-width: 601px)": {
-          "max-width": "100%",
-          "margin-left": "0px",
-          "margin-bottom": "0px"
-        }
-      },
-      "button": {
-        "font-family": "Oxygen, sans-serif",
-        "font-weight": "bold",
-        ":hover": {
-          "background-color": "#d16b1f"
-        },
-        "background-color": "#e87722",
-        ":focus": {
-          "background-color": "#d16b1f"
-        },
-        "border-radius": "16px"
-      }
-    },
-    "googleFonts": [
-      "Oxygen"
-    ],
-    "text": {
-      "button": "Add to cart"
-    }
-  },
-  "option": {},
-  "cart": {
-    "styles": {
-      "button": {
-        "font-family": "Oxygen, sans-serif",
-        "font-weight": "bold",
-        ":hover": {
-          "background-color": "#d16b1f"
-        },
-        "background-color": "#e87722",
-        ":focus": {
-          "background-color": "#d16b1f"
-        },
-        "border-radius": "16px"
-      }
-    },
-    "text": {
-      "total": "Subtotal",
-      "button": "Checkout"
-    },
-    "googleFonts": [
-      "Oxygen"
-    ]
-  },
-  "toggle": {
-    "styles": {
-      "toggle": {
-        "font-family": "Oxygen, sans-serif",
-        "font-weight": "bold",
-        "background-color": "#e87722",
-        ":hover": {
-          "background-color": "#d16b1f"
-        },
-        ":focus": {
-          "background-color": "#d16b1f"
-        }
-      }
-    },
-    "googleFonts": [
-      "Oxygen"
-    ]
-  }
-},
-      });
-    });
-  }
-})();
-/*]]>*/
-</script>
+
 <script>
 var GALLERY_IMGS = [
   'assets/elec-kit-flatlay.jpg',
@@ -798,42 +639,7 @@ function galleryNav(dir) {
   var nextIdx = (activeIdx + dir + thumbs.length) % thumbs.length;
   thumbs[nextIdx].click();
 }
-// Sync price-option cards with the Shopify variant dropdown
-(function(){
-  var opts = Array.from(document.querySelectorAll('.pdp__price-opt'));
-  if(!opts.length) return;
-  var node = document.getElementById('product-component-1781338761901');
 
-  function findSelect(){ return node ? node.querySelector('select') : null; }
-
-  function applyVariant(key){
-    var sel = findSelect();
-    if(!sel) return false;
-    var matched = false;
-    Array.from(sel.options).forEach(function(o){
-      var t = o.textContent.trim().toLowerCase();
-      if(t === key){ sel.value = o.value; matched = true; }
-    });
-    if(matched){ sel.dispatchEvent(new Event('change', {bubbles:true})); }
-    return matched;
-  }
-
-  opts.forEach(function(btn){
-    btn.addEventListener('click', function(){
-      opts.forEach(function(b){ b.classList.remove('is-active'); });
-      btn.classList.add('is-active');
-      var key = btn.getAttribute('data-variant');
-      // retry until the Shopify dropdown has rendered
-      if(!applyVariant(key)){
-        var tries = 0;
-        var iv = setInterval(function(){
-          tries++;
-          if(applyVariant(key) || tries > 20){ clearInterval(iv); }
-        }, 250);
-      }
-    });
-  });
-})();
 </script>
 </body>
 </html>

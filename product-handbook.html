@@ -159,6 +159,7 @@
 .pdp__buy-sub { font-size: 16px; font-weight: 600; color: #000; }
 .pdp__buy-opt--main .pdp__price { font-family: var(--font-body); font-weight: 600; font-size: 14px; color: #000; line-height: 1; }
 .pdp__buy-slot { margin-top: auto; padding-top: 14px; display: flex; justify-content: center; width: 100%; }
+.pdp__buy-slot form{margin:0}.pdp__buy-slot .PaymentButton-securedBy,.pdp__buy-slot .PaymentButton-text{white-space:nowrap !important;text-wrap:nowrap !important}
 .pdp__btn-ebook { margin-top: auto; display: flex; align-items: center; justify-content: center; width: 100%; height: 48px; background: #fff; border: 1px solid var(--border); border-radius: 16px; text-decoration: none; transition: border-color 0.18s, box-shadow 0.18s; padding: 0 14px; }
 .pdp__btn-ebook:hover { border-color: var(--text-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 .pdp__btn-ebook img { max-width: 100%; max-height: 30px; object-fit: contain; display: block; }
@@ -439,7 +440,7 @@
             <div class="pdp__buy-opt pdp__buy-opt--main">
               <span class="pdp__buy-opt-label">Hardcover</span>
               <div class="pdp__price">₹2,000</div>
-              <div class="pdp__buy-slot" id='product-component-1791695117251'></div>
+              <div class="pdp__buy-slot"><form><script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_To6GqKgYmC4ywg" async></script></form></div>
             </div>
             <div class="pdp__buy-opt pdp__buy-opt--ebook">
               <span class="pdp__buy-opt-label">E-book</span>
@@ -626,109 +627,7 @@ function closeKindlePopup(){var p=document.getElementById('kindle-popup');p.clas
 document.getElementById('kindle-popup').addEventListener('click',function(e){if(e.target===this)closeKindlePopup();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeKindlePopup();});
 </script>
-<script type="text/javascript">
-/*<![CDATA[*/
-(function () {
-  var scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
-  if (window.ShopifyBuy) {
-    if (window.ShopifyBuy.UI) {
-      ShopifyBuyInit();
-    } else {
-      loadScript();
-    }
-  } else {
-    loadScript();
-  }
-  function loadScript() {
-    var script = document.createElement('script');
-    script.async = true;
-    script.src = scriptURL;
-    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(script);
-    script.onload = ShopifyBuyInit;
-  }
-  function ShopifyBuyInit() {
-    var client = ShopifyBuy.buildClient({
-      domain: 's1nbge-re.myshopify.com',
-      storefrontAccessToken: 'be50d2289ab65427b570af0332d10844',
-    });
-    ShopifyBuy.UI.onReady(client).then(function (ui) {
-      ui.createComponent('product', {
-        id: '9538142535937',
-        node: document.getElementById('product-component-1791695117251'),
-        moneyFormat: 'Rs.%20%7B%7Bamount%7D%7D',
-        options: {
-  "product": {
-    "styles": {
-      "product": {
-        "@media (min-width: 601px)": {
-          "max-width": "100%",
-          "margin-left": "0",
-          "margin-bottom": "0"
-        }
-      },
-      "button": {
-        "font-family": "Oxygen, sans-serif",
-        "font-weight": "bold",
-        ":hover": { "background-color": "#d16b1f" },
-        "background-color": "#e87722",
-        ":focus": { "background-color": "#d16b1f" },
-        "border-radius": "16px"
-      }
-    },
-    "contents": { "img": false, "title": false, "price": false },
-    "text": { "button": "Add to cart" },
-    "googleFonts": ["Oxygen"]
-  },
-  "modalProduct": {
-    "contents": { "img": false, "imgWithCarousel": true, "button": false, "buttonWithQuantity": true },
-    "styles": {
-      "product": { "@media (min-width: 601px)": { "max-width": "100%", "margin-left": "0px", "margin-bottom": "0px" } },
-      "button": {
-        "font-family": "Oxygen, sans-serif",
-        "font-weight": "bold",
-        ":hover": { "background-color": "#d16b1f" },
-        "background-color": "#e87722",
-        ":focus": { "background-color": "#d16b1f" },
-        "border-radius": "16px"
-      }
-    },
-    "googleFonts": ["Oxygen"],
-    "text": { "button": "Add to cart" }
-  },
-  "option": {},
-  "cart": {
-    "styles": {
-      "button": {
-        "font-family": "Oxygen, sans-serif",
-        "font-weight": "bold",
-        ":hover": { "background-color": "#d16b1f" },
-        "background-color": "#e87722",
-        ":focus": { "background-color": "#d16b1f" },
-        "border-radius": "16px"
-      }
-    },
-    "text": { "total": "Subtotal", "button": "Checkout" },
-    "googleFonts": ["Oxygen"]
-  },
-  "toggle": {
-    "styles": {
-      "toggle": {
-        "font-family": "Oxygen, sans-serif",
-        "font-weight": "bold",
-        "background-color": "#e87722",
-        ":hover": { "background-color": "#d16b1f" },
-        ":focus": { "background-color": "#d16b1f" }
-      }
-    },
-    "googleFonts": ["Oxygen"]
-  }
-},
-      });
-    });
-  }
-})();
-/*]]>*/
-</script>
+
 
 <script>
 var GALLERY_IMGS = [
