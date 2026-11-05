@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Workshop on Fundamentals of Electronics — Orca Robotics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+.pdp { padding: 40px 0 80px; }
+
+.pdp__top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: start;
+  padding-bottom: 56px;
+  border-bottom: 1px solid var(--border);
+}
+.pdp__gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 88px;
+  align-self: start;
+}
+.pdp__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+.pdp__main-img {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pdp__main-img img { width: 100%; height: 100%; object-fit: contain; padding: 32px; display: block; }
+
+.pdp__tag-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.pdp__num { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; }
+.pdp__title {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(22px, 2.8vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+.pdp__subtitle {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pdp__features {
+  list-style: none; padding: 0; margin: 0 0 24px;
+  display: flex; flex-direction: column; gap: 9px;
+}
+.pdp__features li {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 11px;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+.pdp__features li::before {
+  content: "→";
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  padding-top: 2px;
+}
+
+.pdp__buy {
+  border: 1px solid var(--border);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pdp__price-row { display: flex; align-items: baseline; gap: 12px; }
+.pdp__price {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--text-primary);
+}
+.pdp__avail {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pdp__avail::before {
+  content: none;
+}
+.pdp__buy-actions { display: flex; flex-direction: column; gap: 10px; }
+
+.pdp__btn-cart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 46px;
+  background: #f0c14b;
+  border: 1px solid #a88734;
+  color: #111;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.18s;
+}
+.pdp__btn-cart:hover { background: #e8b830; }
+.pdp__btn-buy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 46px;
+  background: #e87722;
+  border: 1px solid #c45f0a;
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.18s;
+}
+.pdp__btn-buy:hover { background: #d4681a; }
+
+/* ── Sections ── */
+.pdp__section {
+  padding: 48px 0;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 48px;
+}
+.pdp__section-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text-primary);
+  padding-top: 4px;
+}
+.pdp__body {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+}
+.pdp__body p { margin: 0 0 14px; }
+.pdp__body p:last-child { margin: 0; }
+.pdp__body strong { color: var(--text-primary); }
+
+/* Covers list */
+.activity-list {
+  list-style: none; padding: 0; margin: 16px 0 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px;
+}
+.activity-list li {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+.activity-list li::before {
+  content: "→";
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  padding-top: 2px;
+}
+
+/* Components table */
+.comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 16px;
+}
+.comp-table thead tr { background: var(--text-primary); }
+.comp-table thead td {
+  padding: 10px 14px;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--text-primary);
+}
+.comp-table tbody tr:nth-child(even) td { background: var(--bg); }
+.comp-table tbody td {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--text-primary);
+}
+.comp-table tbody td:last-child {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: center;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* FAQ */
+.faq-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
+.faq-item {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+}
+.faq-item:first-child { border-top: 1px solid var(--border); }
+.faq-q {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+.faq-a {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Specs table */
+.specs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.specs-table tr:nth-child(odd) td { background: var(--bg); }
+.specs-table td {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.specs-table td:first-child {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  width: 38%;
+}
+.specs-table td:last-child { font-weight: 500; color: var(--text-primary); }
+
+/* Related */
+.related-strip {
+  border: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  overflow: hidden;
+}
+.related-strip:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.related-strip__img {
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.related-strip__img img { width: 100%; height: 100%; object-fit: contain; padding: 16px; }
+.related-strip__body { padding: 20px 24px; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+.related-strip__num { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.related-strip__title { font-family: var(--font-display); font-weight: 700; font-size: 16px; }
+.related-strip__desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; }
+
+@media (max-width: 860px) {
+  .pdp__top { grid-template-columns: 1fr; gap: 32px; }
+  .pdp__gallery { position: static; }
+  .pdp__section { grid-template-columns: 1fr; gap: 20px; }
+  .activity-list { grid-template-columns: 1fr; }
+  .related-strip { grid-template-columns: 120px 1fr; }
+}
+
+/* rounded corners */
+.pdp__main-img{border-radius:12px}
+.pdp__thumb{border-radius:8px}
+.pdp__buy{border-radius:12px}
+.pdp__soon{display:flex;align-items:center;justify-content:center;height:48px;border:1px dashed var(--border);border-radius:12px;font-family:var(--font-mono);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted)}
+.related-strip{border-radius:12px}
+.pdp__num,.pdp__subtitle,.pdp__avail,.pdp__body,.activity-list li,.specs-table td:first-child,.faq-a,.pdp__note,.terms-list{color:#000 !important}.pdp__main-img,.pdp__buy,.pdp__section,.pdp__top,.pdp__subtitle,.specs-table td{border-color:#000 !important}.specs-table tr:nth-child(odd) td{background:#fff !important}.pdp a.breadcrumb-link,.pdp-crumb,.pdp-crumb a{color:#000 !important}.pdp__body p,.pdp p,.nav__links a,.footer,.footer a,.footer__inner>div,.tag{color:#000 !important}.tag{background:#fff !important;border:1px solid #000 !important}.footer,.nav{border-color:#000 !important}
+.pdp__main-img{aspect-ratio:4/5}.pdp__main-img img{object-fit:cover;padding:0}.pdp__date{display:flex;flex-direction:column;gap:4px}.pdp__date-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-primary)}.pdp__date-val{font-family:var(--font-body);font-weight:700;font-size:24px;color:var(--text-primary)}.pdp__date-sub{font-size:14px;color:var(--text-primary)}.pdp__book{display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:10px;background:var(--text-primary);color:#fff;text-decoration:none;font-family:var(--font-body);font-weight:600;font-size:15px;transition:background .18s}.pdp__book:hover{background:var(--accent);color:#fff}.pdp__note{font-size:13px;color:var(--text-secondary);line-height:1.5;margin:0}.terms-list{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:12px;font-size:14px;line-height:1.65;color:var(--text-secondary)}.terms-list strong{color:var(--text-primary)}.pdp__body a,.faq-a a,.terms-list a{color:var(--accent)}
+.pdp__img-note{margin:4px 0 0;font-size:12px;line-height:1.5;color:#000}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav__inner">
+    <a href="index.html" class="brand" aria-label="Orca Robotics home">
+      <img class="brand__mark-img" src="assets/orca-mark.png" alt="" />
+      <span class="brand__word">Orca Robotics</span>
+    </a>
+    <nav>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="workshops.html">Workshops</a></li>
+        <li><a href="simulators.html">Simulators</a></li>
+        <li><a href="atal-lab.html">Atal Lab</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+    <button type="button" class="btn btn--outline btn--sm nav__cta" data-community-open>Join Community</button>
+    <a href="shop.html" class="btn btn--primary btn--sm nav__cta">Shop</a>
+    <button class="nav__hamburger" aria-label="Open menu"><span></span></button>
+  </div>
+</header>
+
+<!-- Breadcrumb -->
+<div style="border-bottom:1px solid #000;padding:10px 0;background:#fff;">
+  <div class="container" style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:0.08em;color:#000;">
+    <a href="shop.html" style="color:#000;text-decoration:none;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='#000'">Shop</a>
+    <span>›</span>
+    <span style="color:var(--text-primary);">Workshop on Fundamentals of Electronics</span>
+  </div>
+</div>
+
+<main class="pdp">
+<div class="container">
+<div class="pdp__top">
+<div class="pdp__gallery">
+<div class="pdp__main-img"><img src="assets/workshop-electronics.jpg" alt="Breadboard circuit with an LED, 9V battery and the electronics handbook open beside it"></div>
+<p class="pdp__img-note">Product images are for illustration only. The actual product may differ slightly.</p>
+</div>
+<div class="pdp__info">
+<div class="pdp__tag-row"><span class="pdp__num">W—01</span><span class="tag">Live Online Workshop</span></div>
+<h1 class="pdp__title">Workshop on Fundamentals of Electronics</h1>
+<p class="pdp__subtitle">Most people learn electronics from a textbook and never build circuits. In this live online workshop on Sunday, 29 November 2026, you will build circuits with your own hands and watch electricity come alive on an oscilloscope.</p>
+<ul class="pdp__features">
+<li>A starter components kit is shipped to your address, so you build along with us step by step.</li>
+<li>Build an automatic night light, a slow dimming LED and an OR gate yourself</li>
+<li>Watch live oscilloscope demonstrations of a capacitor discharge curve and a half wave rectifier with a filter</li>
+<li>No prior electronics knowledge needed</li>
+</ul>
+<div class="pdp__buy">
+<div class="pdp__date">
+<span class="pdp__date-label">Next workshop</span>
+<span class="pdp__date-val">Sunday, 29 November 2026</span>
+<span class="pdp__date-sub">11:00 AM IST, about 2 hours · Live online</span>
+</div>
+<a class="pdp__book" href="https://rzp.io/rzp/BuildAndLearn" target="_blank" rel="noopener">Book workshop <span class="arrow"></span></a>
+<p class="pdp__note">Registration closes: 20 November 2026, so your kit reaches you in time</p>
+</div>
+</div>
+</div>
+<div class="pdp__section">
+<div class="pdp__section-label">What you will build yourself</div>
+<div><p class="pdp__body" style="margin-bottom:12px;">With your shipped kit:</p>
+<ul class="pdp__features" style="margin:0;">
+<li>An automatic night light using an LDR, which switches on in the dark and off in the light</li>
+<li>A slow dimming LED powered by a capacitor releasing its stored energy</li>
+<li>An OR gate, to see how digital logic works</li>
+</ul></div>
+</div>
+<div class="pdp__section">
+<div class="pdp__section-label">What we will demonstrate live</div>
+<div><p class="pdp__body" style="margin-bottom:12px;">Watch on screen:</p>
+<ul class="pdp__features">
+<li>The capacitor's discharge curve plotted on an oscilloscope</li>
+<li>A half wave rectifier with a filter, shown on the oscilloscope</li>
+</ul>
+<div class="pdp__body"><p>The oscilloscope is not included in the shipped kit. These demonstrations are performed by the instructor while you watch, so you can see what is happening inside the circuits you build.</p>
+<p>Along the way you will understand voltage, current, resistance, capacitance and semiconductors by building circuits, not by memorising concepts.</p></div></div>
+</div>
+<div class="pdp__section">
+<div class="pdp__section-label">What is in your kit</div>
+<div>
+<ul class="activity-list" style="margin-top:0;"><li>Breadboard</li><li>9V battery</li><li>9V battery connector</li><li>LDR</li><li>LED</li><li>Resistor</li><li>10K potentiometer</li><li>Capacitor</li><li>Diode</li><li>Pushbutton</li><li>Push type connector</li><li>Jumper wires</li></ul>
+<p class="pdp__body" style="margin:16px 0 0;">No oscilloscope or multimeter is included.</p>
+</div>
+</div>
+<div class="pdp__section">
+<div class="pdp__section-label">Who it is for</div>
+<div class="pdp__body"><p>Students, beginners and curious builders. No prior electronics knowledge needed. All you need is a laptop or phone and an internet connection.</p></div>
+</div>
+<div class="pdp__section">
+<div class="pdp__section-label">Important dates</div>
+<table class="specs-table">
+<tr><td>Registration closes</td><td>20 November 2026, so your kit reaches you in time</td></tr>
+<tr><td>Kit dispatch</td><td>22 November 2026</td></tr>
+<tr><td>Live workshop</td><td>Sunday, 29 November 2026, 11:00 AM IST, about 2 hours</td></tr>
+<tr><td>Joining link</td><td>We will share the link by email before the session, so please enter your email address carefully.</td></tr>
+</table>
+</div>
+<div class="pdp__section">
+<div class="pdp__section-label">Shipping, refunds and rescheduling</div>
+<div class="pdp__body">
+<p><strong>Shipping:</strong> Delivery within India only. Please enter your full address, phone number and age group at checkout and double check them.</p>
+<p><strong>Refunds and rescheduling:</strong> Because a physical kit is prepared and shipped for every participant, fees are not refundable. If your kit is lost in transit or arrives damaged before the session, we will reschedule the session, with the new date decided by the convenience of the majority. Please read our <a href="refund-policy.html">refund policy</a>.</p>
+</div>
+</div>
+<div class="pdp__section">
+<div class="pdp__section-label">Terms &amp; Conditions</div>
+<ol class="terms-list">
+<li><strong>Registration:</strong> Your seat is confirmed once payment is successful. The joining link and all details are sent by email, so please enter your email and phone number correctly.</li>
+<li><strong>What is included:</strong> Participants build the LDR light, the capacitor and LED circuit and the OR gate with the shipped kit. The oscilloscope activities are live demonstrations by the instructor and are not built by participants. No oscilloscope or multimeter is included in the kit.</li>
+<li><strong>Age:</strong> We collect your age group at registration. Participants under 18 should join with parent or guardian supervision.</li>
+<li><strong>Shipping:</strong> Kits ship within India only to the address given at checkout. We are not responsible for delays or non-delivery caused by an incorrect address. Registration closes 20 November 2026 and dispatch is planned for 22 November 2026.</li>
+<li><strong>Refunds:</strong> As a kit is prepared and shipped for every participant, fees are not refundable. See <a href="refund-policy.html">https://orcarobotics.in/refund-policy.html</a></li>
+<li><strong>Lost or damaged kits and rescheduling:</strong> If your kit is lost in transit or arrives damaged before the session, contact <a href="mailto:support@orcarobotics.in">support@orcarobotics.in</a> or 8147013284 and we will reschedule the session. The new date will be decided as per the convenience of the majority and shared by email.</li>
+<li><strong>Safety:</strong> The kit uses a 9V battery only. Do not connect components to mains electricity. Parents or guardians should supervise younger participants. Small parts are a choking hazard.</li>
+<li><strong>Recordings and content:</strong> The session may be recorded by us. Do not record, copy or share the session or materials without permission. All content belongs to Orca Robotics.</li>
+<li><strong>Privacy:</strong> We collect your name, email, phone, address and age group only to run the workshop, ship your kit and share updates. We do not sell your data. Payments are processed by Razorpay.</li>
+<li><strong>Liability:</strong> This workshop is for educational purposes. Orca Robotics is not liable for loss or damage from using the components outside the given instructions.</li>
+</ol>
+</div>
+<div class="pdp__section">
+<div class="pdp__section-label">Questions?</div>
+<div class="pdp__body"><p>Call or WhatsApp us on <a href="https://wa.me/918147013284">8147013284</a>, email <a href="mailto:support@orcarobotics.in">support@orcarobotics.in</a>, or message us on Instagram <a href="https://instagram.com/orca.robotics">@orca.robotics</a>.</p>
+<p>Contact Us: <a href="mailto:support@orcarobotics.in">support@orcarobotics.in</a> · <a href="tel:+919353557985">9353557985</a></p></div>
+</div>
+<div class="pdp__section" style="border-bottom:none;padding-bottom:0;">
+<div class="pdp__section-label">Book your seat</div>
+<div style="display:flex;flex-direction:column;gap:12px;max-width:420px;">
+<a class="pdp__book" href="https://rzp.io/rzp/BuildAndLearn" target="_blank" rel="noopener">Book workshop <span class="arrow"></span></a>
+<p class="pdp__note">Sunday, 29 November 2026 · 11:00 AM IST · Registration closes: 20 November 2026</p>
+</div>
+</div>
+</div>
+</main>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div>Orca Robotics © 2025</div>
+    <ul class="footer__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="workshops.html">Workshops</a></li>
+      <li><a href="simulators.html">Simulators</a></li>
+      <li><a href="atal-lab.html">Atal Lab</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+      <li><a href="terms.html">Terms &amp; Conditions</a></li>
+      <li><a href="refund-policy.html">Refund Policy</a></li>
+      <li><a href="shipping-policy.html">Shipping Policy</a></li>
+      <li><a href="contact.html">Contact Us</a></li>
+    </ul>
+    <div class="footer__right"><a href="mailto:info@orcarobotics.in">info@orcarobotics.in</a></div>
+  </div>
+</footer>
+
+<script src="scripts.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Contact Us — Orca Robotics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+.contact-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:8px}
+.contact-card{border:1px solid var(--border);padding:26px;display:flex;flex-direction:column;gap:8px}
+.contact-card__label{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted)}
+.contact-card__value{font-family:var(--font-display);font-weight:600;font-size:18px;color:var(--text-primary);line-height:1.4}
+.contact-card__value a{color:var(--text-primary);text-decoration:none}
+.contact-card__value a:hover{color:var(--accent)}
+.contact-card__note{font-size:13px;color:var(--text-secondary);line-height:1.55}
+@media (max-width:640px){.contact-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body data-screen-label="Contact Us">
+
+<header class="nav">
+  <div class="container nav__inner">
+    <a href="index.html" class="brand" aria-label="Orca Robotics home">
+      <img class="brand__mark-img" src="assets/orca-mark.png" alt="" />
+      <span class="brand__word">Orca Robotics</span>
+    </a>
+    <nav>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="workshops.html">Workshops</a></li>
+        <li><a href="simulators.html">Simulators</a></li>
+        <li><a href="atal-lab.html">Atal Lab</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+    <button type="button" class="btn btn--outline btn--sm nav__cta" data-community-open>Join Community</button>
+    <a href="shop.html" class="btn btn--primary btn--sm nav__cta is-active">Shop</a>
+    <button class="nav__hamburger" aria-label="Open menu"><span></span></button>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <span class="eyebrow">— Contact</span>
+    <h1>Contact us.</h1>
+    <p class="lead">Questions about a product, a workshop, or an order? Reach us directly — we usually reply within 48 hours.</p>
+  </div>
+</section>
+
+<section class="section section--first">
+  <div class="container">
+    <div class="contact-grid">
+      <div class="contact-card">
+        <span class="contact-card__label">Email</span>
+        <div class="contact-card__value"><a href="mailto:info@orcarobotics.in">info@orcarobotics.in</a></div>
+        <p class="contact-card__note">For product, order, and general enquiries.</p>
+      </div>
+      <div class="contact-card">
+        <span class="contact-card__label">Phone</span>
+        <div class="contact-card__value"><a href="tel:+918147013284">+91&nbsp;81470&nbsp;13284</a></div>
+        <p class="contact-card__note">Mon–Sat, 10 AM – 6 PM IST.</p>
+      </div>
+      <div class="contact-card">
+        <span class="contact-card__label">Instagram</span>
+        <div class="contact-card__value"><a href="https://instagram.com/orca.robotics" target="_blank" rel="noopener">@orca.robotics</a></div>
+        <p class="contact-card__note">Builds, updates, and quick DMs.</p>
+      </div>
+      <div class="contact-card">
+        <span class="contact-card__label">Address</span>
+        <div class="contact-card__value">ORCA Robotics LLP</div>
+        <p class="contact-card__note">MIG 328, 16th Cross, Navanagar, Hubballi, Karnataka, India</p>
+      </div>
+    </div>
+
+    <div style="margin-top:40px;border:1px solid var(--border);padding:28px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+      <div>
+        <span style="font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:8px;">— Want a workshop?</span>
+        <h2 style="font-size:clamp(20px,2.4vw,28px);margin:0;letter-spacing:-0.01em;">Book a workshop at your institution.</h2>
+      </div>
+      <a href="workshops.html#enquire" class="btn btn--primary" style="flex-shrink:0;">Send an enquiry <span class="arrow"></span></a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div>Orca Robotics © 2025</div>
+    <ul class="footer__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="workshops.html">Workshops</a></li>
+      <li><a href="simulators.html">Simulators</a></li>
+      <li><a href="atal-lab.html">Atal Lab</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+      <li><a href="terms.html">Terms &amp; Conditions</a></li>
+      <li><a href="refund-policy.html">Refund Policy</a></li>
+      <li><a href="shipping-policy.html">Shipping Policy</a></li>
+      <li><a href="contact.html">Contact Us</a></li>
+    </ul>
+    <div class="footer__right"><a href="mailto:info@orcarobotics.in">info@orcarobotics.in</a></div>
+  </div>
+</footer>
+
+<script src="scripts.js"></script>
+</body>
+</html>
